@@ -1,12 +1,13 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { FaRegCopy, FaRegCheckCircle  } from "react-icons/fa";
+import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
 
 const createSafeId = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  if (typeof crypto !== "undefined" && crypto.randomUUID)
+    return crypto.randomUUID();
   return `user-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
@@ -81,20 +82,20 @@ const App = () => {
   const missing = Math.max(session.capacity - joined, 0);
   const isFull = missing === 0;
 
-useEffect(() => {
-  const load = async () => {
-    try {
-      const res = await fetch("/api/session");
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
-      setSession(data);
-    } catch (e) {
-      console.warn("Failed to load session data, using initial data.", e);
-    }
-  };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/session");
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        setSession(data);
+      } catch (e) {
+        console.warn("Failed to load session data, using initial data.", e);
+      }
+    };
 
-  load();
-}, []);
+    load();
+  }, []);
   const commitName = () => {
     const finalName = draft.trim();
     if (!finalName) return false;
@@ -106,8 +107,9 @@ useEffect(() => {
     return true;
   };
 
-  const join = (slot) => {
+  const join = async (slot) => {
     const finalName = draft.trim() || name.trim();
+
     if (!finalName) {
       setEditing(true);
       return;
@@ -118,12 +120,44 @@ useEffect(() => {
     setDraft(finalName);
     setEditing(false);
 
+    // optimistic update
     setSession((prev) => ({
       ...prev,
-      participants: upsertParticipant(prev.participants, userId, finalName, slot),
+      participants: upsertParticipant(
+        prev.participants,
+        userId,
+        finalName,
+        slot,
+      ),
     }));
 
-    navigator.vibrate?.(40);
+    try {
+      const updatedSession = await saveParticipant(slot, finalName);
+      setSession(updatedSession);
+      navigator.vibrate?.(40);
+    } catch (error) {
+      console.warn("Failed to save participant.", error);
+    }
+  };
+
+  const saveParticipant = async (slot, finalName) => {
+    const res = await fetch("/api/session/participants", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: userId,
+        name: finalName,
+        slot,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Save failed");
+    }
+
+    return res.json();
   };
 
   const copy = async () => {
@@ -151,7 +185,11 @@ useEffect(() => {
   return (
     <Page>
       <CopyButton onClick={copy} aria-label="Copy summary" copied={copied}>
-        {!copied ? <FaRegCopy size={"2em"}/> : <FaRegCheckCircle  size={"2em"}/>}
+        {!copied ? (
+          <FaRegCopy size={"2em"} />
+        ) : (
+          <FaRegCheckCircle size={"2em"} />
+        )}
       </CopyButton>
 
       <Content>
@@ -164,7 +202,9 @@ useEffect(() => {
           </HeaderRow>
 
           <StatusBox $isFull={isFull}>
-            <StatusMain>👥 {joined}/{session.capacity}</StatusMain>
+            <StatusMain>
+              👥 {joined}/{session.capacity}
+            </StatusMain>
             <StatusSub>{isFull ? "đủ rồi" : `còn thiếu ${missing}`}</StatusSub>
           </StatusBox>
 
@@ -230,7 +270,14 @@ const Page = styled.div`
   background: #f4f4f5;
   color: #18181b;
   padding: 16px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 `;
 
 const Content = styled.main`
@@ -258,7 +305,7 @@ const CopyButton = styled.button`
   gap: 8px;
   border: none;
   border-radius: 16px;
-  background: ${props => props.copied === true ? "#22c55e" : "lightcoral"};
+  background: ${(props) => (props.copied === true ? "#22c55e" : "lightcoral")};
   color: white;
   padding: 12px 14px;
   font-weight: 800;
