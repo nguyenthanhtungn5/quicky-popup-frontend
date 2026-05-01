@@ -81,6 +81,17 @@ const App = () => {
   const missing = Math.max(session.capacity - joined, 0);
   const isFull = missing === 0;
 
+  useState(() => {
+    fetch("/api/session")
+      .then((res) => res.json())
+      .then((data) => {
+        setSession(data);
+      })
+      .catch(() => {
+        // Ignore fetch errors and use initial session data.
+      });
+  });
+
   const commitName = () => {
     const finalName = draft.trim();
     if (!finalName) return false;
