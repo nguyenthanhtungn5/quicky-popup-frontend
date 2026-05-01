@@ -56,11 +56,11 @@ const upsertParticipant = (participants, userId, name, slot) => {
 };
 
 const initialSession = {
-  id: "abc123",
-  title: "CL 29.04",
+  id: "Test-Session-1",
+  title: "CL 29.05",
   subtitle: "15–16h · 16–18h",
   capacity: 10,
-  link: "https://app/s/abc123",
+  link: "https://auzora.de",
   participants: [
     { id: "1", name: "Bin", slot: "15h" },
     { id: "2", name: "Thanh", slot: "15h" },
