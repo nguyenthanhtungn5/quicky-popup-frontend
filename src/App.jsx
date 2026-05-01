@@ -81,17 +81,20 @@ const App = () => {
   const missing = Math.max(session.capacity - joined, 0);
   const isFull = missing === 0;
 
-  useEffect(() => {
-    fetch("/api/session")
-      .then((res) => res.json())
-      .then((data) => {
-        setSession(data);
-      })
-      .catch((error) => {
-       console.warn("Failed to load session data, using initial data.", error);
-      });
-  });
+useEffect(() => {
+  const load = async () => {
+    try {
+      const res = await fetch("/api/session");
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      setSession(data);
+    } catch (e) {
+      console.warn("Failed to load session data, using initial data.", e);
+    }
+  };
 
+  load();
+}, []);
   const commitName = () => {
     const finalName = draft.trim();
     if (!finalName) return false;
