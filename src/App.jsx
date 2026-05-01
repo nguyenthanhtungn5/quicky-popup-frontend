@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import styled from "styled-components";
+import { FaRegCopy, FaRegCheckCircle  } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -60,7 +61,7 @@ const initialSession = {
   title: "CL 29.05",
   subtitle: "15–16h · 16–18h",
   capacity: 10,
-  link: "https://auzora.de",
+  link: "https://www.auzora.de",
   participants: [
     { id: "1", name: "Bin", slot: "15h" },
     { id: "2", name: "Thanh", slot: "15h" },
@@ -135,9 +136,8 @@ const App = () => {
 
   return (
     <Page>
-      <CopyButton onClick={copy} aria-label="Copy summary">
-        <CopyIcon>{copied ? "✅" : "📋"}</CopyIcon>
-        <CopyText>{copied ? "Copied" : "Copy"}</CopyText>
+      <CopyButton onClick={copy} aria-label="Copy summary" copied={copied}>
+        {!copied ? <FaRegCopy size={"2em"}/> : <FaRegCheckCircle  size={"2em"}/>}
       </CopyButton>
 
       <Content>
@@ -244,7 +244,7 @@ const CopyButton = styled.button`
   gap: 8px;
   border: none;
   border-radius: 16px;
-  background: #22c55e;
+  background: ${props => props.copied === true ? "#22c55e" : "lightcoral"};
   color: white;
   padding: 12px 14px;
   font-weight: 800;
@@ -276,6 +276,7 @@ const Title = styled.h1`
   line-height: 1.1;
   font-weight: 900;
   letter-spacing: -0.04em;
+  color: #111;
 `;
 
 const Subtitle = styled.p`
@@ -363,6 +364,7 @@ const NameDisplay = styled.button`
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
+  color: #18181b;
 `;
 
 const ActionGroup = styled.div`
@@ -402,6 +404,7 @@ const SectionTitle = styled.h2`
   margin: 0;
   font-size: 18px;
   font-weight: 900;
+  color: #111;
 `;
 
 const ParticipantList = styled.div`
