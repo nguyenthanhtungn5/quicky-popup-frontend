@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import  { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FaRegCopy, FaRegCheckCircle  } from "react-icons/fa";
 
@@ -81,7 +81,7 @@ const App = () => {
   const missing = Math.max(session.capacity - joined, 0);
   const isFull = missing === 0;
 
-  useState(() => {
+  useEffect(() => {
     fetch("/api/session")
       .then((res) => res.json())
       .then((data) => {
