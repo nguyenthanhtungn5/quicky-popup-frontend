@@ -87,8 +87,8 @@ const App = () => {
       .then((data) => {
         setSession(data);
       })
-      .catch(() => {
-        // Ignore fetch errors and use initial session data.
+      .catch((error) => {
+       console.warn("Failed to load session data, using initial data.", error);
       });
   });
 
