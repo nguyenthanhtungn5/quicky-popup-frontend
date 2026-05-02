@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -74,7 +75,9 @@ const App = () => {
   const [userId] = useState(getOrCreateUserId);
   const [name, setName] = useState(readName());
   const [draft, setDraft] = useState(readName());
-  const [editing, setEditing] = useState(!readName());
+  const [editingName, setEditingName] = useState(!readName());
+  const [editingParticipantId, setEditingParticipantId] = useState(null);
+  const [participantDraft, setParticipantDraft] = useState("");
   const [session, setSession] = useState(initialSession);
   const [copied, setCopied] = useState(false);
 
@@ -96,6 +99,7 @@ const App = () => {
 
     load();
   }, []);
+
   const commitName = () => {
     const finalName = draft.trim();
     if (!finalName) return false;
@@ -103,41 +107,13 @@ const App = () => {
     saveName(finalName);
     setName(finalName);
     setDraft(finalName);
-    setEditing(false);
+    setEditingName(false);
     return true;
   };
 
-  const join = async (slot) => {
-    const finalName = draft.trim() || name.trim();
-
-    if (!finalName) {
-      setEditing(true);
-      return;
-    }
-
-    saveName(finalName);
-    setName(finalName);
-    setDraft(finalName);
-    setEditing(false);
-
-    // optimistic update
-    setSession((prev) => ({
-      ...prev,
-      participants: upsertParticipant(
-        prev.participants,
-        userId,
-        finalName,
-        slot,
-      ),
-    }));
-
-    try {
-      const updatedSession = await saveParticipant(slot, finalName);
-      setSession(updatedSession);
-      navigator.vibrate?.(40);
-    } catch (error) {
-      console.warn("Failed to save participant.", error);
-    }
+  const startEditParticipant = (participant) => {
+    setEditingParticipantId(participant.id);
+    setParticipantDraft(participant.name);
   };
 
   const saveParticipant = async (slot, finalName) => {
@@ -182,6 +158,72 @@ const App = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const join = async (slot) => {
+    const finalName = draft.trim() || name.trim();
+
+    if (!finalName) {
+      setName("");
+      return;
+    }
+
+    saveName(finalName);
+    setName(finalName);
+    setDraft(finalName);
+
+    setSession((prev) => ({
+      ...prev,
+      participants: upsertParticipant(
+        prev.participants,
+        userId,
+        finalName,
+        slot,
+      ),
+    }));
+
+    try {
+      const updatedSession = await saveParticipant(slot, finalName);
+      setSession(updatedSession);
+      navigator.vibrate?.(40);
+    } catch (error) {
+      console.warn("Failed to save participant.", error);
+    }
+  };
+
+  const saveParticipantEdit = async (participant) => {
+    const finalName = participantDraft.trim();
+    if (!finalName) return;
+
+    setSession((prev) => ({
+      ...prev,
+      participants: prev.participants.map((p) =>
+        p.id === participant.id ? { ...p, name: finalName } : p,
+      ),
+    }));
+
+    setEditingParticipantId(null);
+
+    try {
+      const res = await fetch("/api/session/participants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: participant.id,
+          name: finalName,
+          slot: participant.slot,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Save failed");
+
+      const updatedSession = await res.json();
+      setSession(updatedSession);
+    } catch (error) {
+      console.warn("Failed to update participant.", error);
+    }
+  };
+
   return (
     <Page>
       <CopyButton onClick={copy} aria-label="Copy summary" copied={copied}>
@@ -209,7 +251,7 @@ const App = () => {
           </StatusBox>
 
           <NameBox>
-            {editing ? (
+            {editingName ? (
               <NameForm>
                 <NameLabel>Tên của bạn</NameLabel>
                 <NameInputRow>
@@ -226,9 +268,9 @@ const App = () => {
                 </NameInputRow>
               </NameForm>
             ) : (
-              <NameDisplay onClick={() => setEditing(true)}>
+              <NameDisplay onClick={() => setEditingName(true)}>
                 <span>👋 {name}</span>
-                <span>✏️</span>
+                <FaEdit />
               </NameDisplay>
             )}
           </NameBox>
@@ -244,13 +286,51 @@ const App = () => {
           <SectionTitle>Danh sách</SectionTitle>
           <ParticipantList>
             {session.participants.map((participant, index) => {
-              const isMe = participant.id === userId;
+              const isEditingThis = editingParticipantId === participant.id;
+
               return (
-                <ParticipantItem key={participant.id} $isMe={isMe}>
-                  <ParticipantName>
-                    {index + 1}. {participant.name}
-                  </ParticipantName>
-                  <ParticipantSlot>{participant.slot}</ParticipantSlot>
+                <ParticipantItem key={participant.id}>
+                  {isEditingThis ? (
+                    <NameInputRow>
+                      <NameInput
+                        value={participantDraft}
+                        onChange={(event) =>
+                          setParticipantDraft(event.target.value)
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter")
+                            saveParticipantEdit(participant);
+                          if (event.key === "Escape")
+                            setEditingParticipantId(null);
+                        }}
+                        autoFocus
+                      />
+                      <SmallButton
+                        onClick={() => saveParticipantEdit(participant)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter")
+                            saveParticipantEdit(participant);
+                          if (event.key === "Escape")
+                            setEditingParticipantId(null);
+                        }}
+                      >
+                        OK
+                      </SmallButton>
+                    </NameInputRow>
+                  ) : (
+                    <>
+                      <ParticipantName>
+                        {index + 1}. {participant.name}
+                      </ParticipantName>
+
+                      <ParticipantSlotEdit>
+                        <ParticipantSlot>{participant.slot}</ParticipantSlot>
+                        <FaEdit
+                          onClick={() => startEditParticipant(participant)}
+                        />
+                      </ParticipantSlotEdit>
+                    </>
+                  )}
                 </ParticipantItem>
               );
             })}
@@ -493,9 +573,18 @@ const ParticipantName = styled.span`
 
 const ParticipantSlot = styled.span`
   margin-left: 12px;
+  font-size: 14px;
+  color: black;
+  flex: 0 0 auto;
+`;
+
+const ParticipantSlotEdit = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #71717a;
   font-size: 14px;
-  flex: 0 0 auto;
+  cursor: pointer;
 `;
 
 const Toast = styled.div`
