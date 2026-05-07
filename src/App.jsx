@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -60,15 +61,11 @@ const upsertParticipant = (participants, userId, name, slot) => {
 
 const initialSession = {
   id: "Test-Session-1",
-  title: "CL 29.05",
-  subtitle: "15–16h · 16–18h",
+  title: "CL -",
+  subtitle: "-",
   capacity: 10,
   link: "https://www.auzora.de",
-  participants: [
-    { id: "1", name: "Bin", slot: "15h" },
-    { id: "2", name: "Thanh", slot: "15h" },
-    { id: "3", name: "Nga", slot: "16h" },
-  ],
+  participants: [],
 };
 
 const App = () => {
@@ -223,14 +220,15 @@ const App = () => {
       console.warn("Failed to update participant.", error);
     }
   };
+  const navigate = useNavigate();
 
   return (
     <Page>
       <CopyButton onClick={copy} aria-label="Copy summary" copied={copied}>
         {!copied ? (
-          <FaRegCopy size={"2em"} />
+          <FaRegCopy size={"3em"} />
         ) : (
-          <FaRegCheckCircle size={"2em"} />
+          <FaRegCheckCircle size={"3em"} />
         )}
       </CopyButton>
 
@@ -269,7 +267,9 @@ const App = () => {
               </NameForm>
             ) : (
               <NameDisplay onClick={() => setEditingName(true)}>
-                <span>👋 {name}</span>
+                <span>
+                  Xin chào <b>{name}</b> 👋
+                </span>
                 <FaEdit />
               </NameDisplay>
             )}
@@ -278,7 +278,7 @@ const App = () => {
           <ActionGroup>
             <FightButton onClick={() => join("15h")}>🔥 Fight! 15h</FightButton>
             <FightButton onClick={() => join("16h")}>🔥 Fight! 16h</FightButton>
-            <CancelButton onClick={() => join("NO")}>❌ Không đi</CancelButton>
+            <CancelButton onClick={() => join("NO")}>Bận mất rồi</CancelButton>
           </ActionGroup>
         </Card>
 
@@ -336,6 +336,19 @@ const App = () => {
             })}
           </ParticipantList>
         </Card>
+        <CardButton
+          style={{
+            justifyContent: "center",
+            display: "flex",
+            cursor: "pointer",
+            fontWeight: "800",
+            background: "lightseagreen",
+            color: "white",
+          }}
+          onClick={() => navigate("/create-session")}
+        >
+          Create Session
+        </CardButton>
       </Content>
 
       {copied && <Toast>✅ Copied! Zurück zu Messenger und einfügen.</Toast>}
@@ -351,8 +364,6 @@ const Page = styled.div`
   color: #18181b;
   padding: 16px;
   font-family:
-    Inter,
-    ui-sans-serif,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -373,6 +384,16 @@ const Card = styled.section`
   padding: 20px;
   margin-bottom: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+`;
+
+const CardButton = styled.button`
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  border: none;
 `;
 
 const CopyButton = styled.button`
@@ -407,9 +428,7 @@ const CopyText = styled.span`
   line-height: 1;
 `;
 
-const HeaderRow = styled.div`
-  padding-right: 92px;
-`;
+const HeaderRow = styled.div``;
 
 const Title = styled.h1`
   margin: 0;
@@ -503,7 +522,6 @@ const NameDisplay = styled.button`
   background: #fafafa;
   padding: 14px;
   font-size: 16px;
-  font-weight: 800;
   cursor: pointer;
   color: #18181b;
 `;
@@ -539,6 +557,7 @@ const CancelButton = styled(BaseActionButton)`
   background: #e4e4e7;
   color: #3f3f46;
   font-size: 16px;
+  font-family: inherit;
 `;
 
 const SectionTitle = styled.h2`
