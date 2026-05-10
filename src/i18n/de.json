@@ -1,0 +1,35 @@
+{
+  "app.createSession": "Session erstellen",
+  "app.createNewSession": "Neue Session erstellen",
+
+  "session.title": "Titel",
+  "session.subtitle": "Untertitel",
+  "session.capacity": "Kapazität",
+
+  "session.exampleTitle": "z. B.: CL 29.05",
+  "session.exampleSubtitle": "15–16 Uhr · 16–18 Uhr",
+
+  "button.create": "Erstellen",
+  "button.cancel": "Abbrechen",
+  "button.edit": "Bearbeiten",
+  "button.delete": "Löschen",
+  "button.copy": "Kopieren",
+
+  "join.fight": "🔥 Fight! {{time}}",
+  "join.full": "Du bist raus",
+  "join.hello": "Hallo {{name}} 👋",
+
+  "list.title": "Teilnehmerliste",
+
+  "capacity.current": "{{current}}/{{max}}",
+  "capacity.remaining": "Noch {{count}} frei",
+
+  "status.loading": "Lädt...",
+  "status.error": "Ein Fehler ist aufgetreten",
+  "status.success": "Erfolgreich gespeichert",
+
+  "empty.noParticipants": "Noch keine Teilnehmer",
+  "empty.noSessions": "Keine Sessions verfügbar",
+  "user.greeting": "Hallo",
+  "join.cancel": "Bin leider beschäftigt"
+}

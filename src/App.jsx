@@ -3,6 +3,8 @@ import styled from "styled-components";
 import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { FaGlobe } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -77,18 +79,30 @@ const App = () => {
   const [participantDraft, setParticipantDraft] = useState("");
   const [session, setSession] = useState(initialSession);
   const [copied, setCopied] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const joined = session.participants.length;
   const missing = Math.max(session.capacity - joined, 0);
   const isFull = missing === 0;
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/session");
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        setSession(data);
+        const sessionsRes = await fetch("/api/sessions");
+        if (!sessionsRes.ok) throw new Error("Sessions API error");
+
+        const sessionsData = await sessionsRes.json();
+        setSessions(sessionsData);
+
+        setActiveSessionId(latestSession.id);
+
+        const sessionRes = await fetch(`/api/session/${latestSession.id}`);
+        if (!sessionRes.ok) throw new Error("Session API error");
+
+        const sessionData = await sessionRes.json();
+        setSession(sessionData);
       } catch (e) {
         console.warn("Failed to load session data, using initial data.", e);
       }
@@ -96,6 +110,20 @@ const App = () => {
 
     load();
   }, []);
+
+  const loadSessionById = async (id) => {
+    try {
+      setActiveSessionId(id);
+
+      const res = await fetch(`/api/session/${id}`);
+      if (!res.ok) throw new Error("Session API error");
+
+      const data = await res.json();
+      setSession(data);
+    } catch (e) {
+      console.warn("Failed to load selected session.", e);
+    }
+  };
 
   const commitName = () => {
     const finalName = draft.trim();
@@ -114,7 +142,7 @@ const App = () => {
   };
 
   const saveParticipant = async (slot, finalName) => {
-    const res = await fetch("/api/session/participants", {
+    const res = await fetch(`/api/session/${session.id}/participants`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -200,7 +228,7 @@ const App = () => {
     setEditingParticipantId(null);
 
     try {
-      const res = await fetch("/api/session/participants", {
+      const res = await fetch(`/api/session/${session.id}/participants`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -221,10 +249,46 @@ const App = () => {
     }
   };
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.resolvedLanguage || "vi";
 
   return (
     <Page>
-      <CopyButton onClick={copy} aria-label="Copy summary" copied={copied}>
+      <LanguageSwitcher>
+        <LanguageIconButton
+          type="button"
+          aria-label={t("language.select")}
+          onClick={() => setLanguageOpen((prev) => !prev)}
+        >
+          <FaGlobe />
+          <CurrentLanguage>{currentLanguage.toUpperCase()}</CurrentLanguage>
+        </LanguageIconButton>
+
+        {languageOpen && (
+          <LanguageDropdown>
+            {[
+              { key: "vi", label: "Tiếng Việt" },
+              { key: "de", label: "Deutsch" },
+              { key: "en", label: "English" },
+            ].map((lang) => (
+              <LanguageOption
+                key={lang.key}
+                type="button"
+                $active={currentLanguage === lang.key}
+                onClick={() => {
+                  i18n.changeLanguage(lang.key);
+                  localStorage.setItem("language", lang.key);
+                  setLanguageOpen(false);
+                }}
+              >
+                <span>{lang.label}</span>
+                {i18n.language === lang.key && <span>✓</span>}
+              </LanguageOption>
+            ))}
+          </LanguageDropdown>
+        )}
+      </LanguageSwitcher>
+      <CopyButton onClick={copy} aria-label={t("button.copy")} copied={copied}>
         {!copied ? (
           <FaRegCopy size={"3em"} />
         ) : (
@@ -233,6 +297,20 @@ const App = () => {
       </CopyButton>
 
       <Content>
+        {sessions.length > 1 && (
+          <TabRow>
+            {sessions.map((item) => (
+              <TabButton
+                key={item.id}
+                type="button"
+                $active={item.id === activeSessionId}
+                onClick={() => loadSessionById(item.id)}
+              >
+                {item.title}
+              </TabButton>
+            ))}
+          </TabRow>
+        )}
         <Card>
           <HeaderRow>
             <div>
@@ -245,13 +323,17 @@ const App = () => {
             <StatusMain>
               👥 {joined}/{session.capacity}
             </StatusMain>
-            <StatusSub>{isFull ? "đủ rồi" : `còn thiếu ${missing}`}</StatusSub>
+            <StatusSub>
+              {isFull
+                ? t("status.full")
+                : t("capacity.remaining", { count: missing })}
+            </StatusSub>
           </StatusBox>
 
           <NameBox>
             {editingName ? (
               <NameForm>
-                <NameLabel>Tên của bạn</NameLabel>
+                <NameLabel>{t("user.nameLabel")}</NameLabel>
                 <NameInputRow>
                   <NameInput
                     value={draft}
@@ -259,7 +341,7 @@ const App = () => {
                     onKeyDown={(event) => {
                       if (event.key === "Enter") commitName();
                     }}
-                    placeholder="Ví dụ: Tùng"
+                    placeholder={t("user.namePlaceholder")}
                     autoFocus
                   />
                   <SmallButton onClick={commitName}>OK</SmallButton>
@@ -268,7 +350,7 @@ const App = () => {
             ) : (
               <NameDisplay onClick={() => setEditingName(true)}>
                 <span>
-                  Xin chào <b>{name}</b> 👋
+                  {t("user.greeting")} <b>{name}</b> 👋
                 </span>
                 <FaEdit />
               </NameDisplay>
@@ -276,14 +358,22 @@ const App = () => {
           </NameBox>
 
           <ActionGroup>
-            <FightButton onClick={() => join("15h")}>🔥 Fight! 15h</FightButton>
-            <FightButton onClick={() => join("16h")}>🔥 Fight! 16h</FightButton>
-            <CancelButton onClick={() => join("NO")}>Bận mất rồi</CancelButton>
+            <FightButton onClick={() => join("15h")}>
+              {t("join.fight", { time: "15h" })}
+            </FightButton>
+
+            <FightButton onClick={() => join("16h")}>
+              {t("join.fight", { time: "16h" })}
+            </FightButton>
+
+            <CancelButton onClick={() => join("NO")}>
+              {t("join.cancel")}
+            </CancelButton>
           </ActionGroup>
         </Card>
 
         <Card>
-          <SectionTitle>Danh sách</SectionTitle>
+          <SectionTitle>{t("list.title")}</SectionTitle>
           <ParticipantList>
             {session.participants.map((participant, index) => {
               const isEditingThis = editingParticipantId === participant.id;
@@ -347,16 +437,39 @@ const App = () => {
           }}
           onClick={() => navigate("/create-session")}
         >
-          Create Session
+          {t("app.createSession")}
         </CardButton>
       </Content>
 
-      {copied && <Toast>✅ Copied! Zurück zu Messenger und einfügen.</Toast>}
+      {copied && <Toast>{t("toast.copied")}</Toast>}
     </Page>
   );
 };
 
 export default App;
+
+const TabRow = styled.div`
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+`;
+
+const TabButton = styled.button`
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+  background: ${({ $active }) => ($active ? "#f97316" : "#e4e4e7")};
+  color: ${({ $active }) => ($active ? "white" : "#3f3f46")};
+  white-space: nowrap;
+
+  &:active {
+    transform: scale(0.97);
+  }
+`;
 
 const Page = styled.div`
   min-height: 100vh;
@@ -374,7 +487,7 @@ const Page = styled.div`
 const Content = styled.main`
   max-width: 430px;
   margin: 0 auto;
-  padding-top: 64px;
+  padding-top: 1em;
   padding-bottom: 32px;
 `;
 
@@ -621,4 +734,74 @@ const Toast = styled.div`
   font-size: 14px;
   font-weight: 800;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+`;
+
+const LanguageSwitcher = styled.div`
+  position: static;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+`;
+
+const LanguageIconButton = styled.button`
+  height: 2em;
+  min-width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 16px;
+  background: white;
+  color: #18181b;
+  padding: 0 14px;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const CurrentLanguage = styled.span`
+  font-size: 12px;
+  line-height: 1;
+`;
+
+const LanguageDropdown = styled.div`
+  position: absolute;
+  top: 60px;
+  left: 0;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+`;
+
+const LanguageOption = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  border-radius: 13px;
+  padding: 12px 13px;
+  background: ${({ $active }) => ($active ? "#ffedd5" : "transparent")};
+  color: ${({ $active }) => ($active ? "#9a3412" : "#18181b")};
+  font-size: 14px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f4f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;

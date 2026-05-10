@@ -1,0 +1,35 @@
+{
+  "app.createSession": "Tạo buổi chơi",
+  "app.createNewSession": "Tạo buổi chơi mới",
+
+  "session.title": "Tiêu đề",
+  "session.subtitle": "Mô tả",
+  "session.capacity": "Số lượng",
+
+  "session.exampleTitle": "Ví dụ: CL 29.05",
+  "session.exampleSubtitle": "15–16h · 16–18h",
+
+  "button.create": "Tạo",
+  "button.cancel": "Huỷ",
+  "button.edit": "Chỉnh sửa",
+  "button.delete": "Xoá",
+  "button.copy": "Sao chép",
+
+  "join.fight": "🔥 Fight! {{time}}",
+  "join.full": "Bạn mất rồi",
+  "join.hello": "Xin chào {{name}} 👋",
+
+  "list.title": "Danh sách",
+
+  "capacity.current": "{{current}}/{{max}}",
+  "capacity.remaining": "Còn thiếu {{count}}",
+
+  "status.loading": "Đang tải...",
+  "status.error": "Có lỗi xảy ra",
+  "status.success": "Lưu thành công",
+
+  "empty.noParticipants": "Chưa có người tham gia",
+  "empty.noSessions": "Chưa có buổi chơi nào",
+  "user.greeting": "Xin chào",
+  "join.cancel": "Bận mất rồi"
+}
