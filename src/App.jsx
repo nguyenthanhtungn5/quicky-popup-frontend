@@ -9,6 +9,17 @@ import { FaGlobe } from "react-icons/fa";
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
 
+const requestJson = async (url, options) => {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
+  return res.json();
+};
+
 const createSafeId = () => {
   if (typeof crypto !== "undefined" && crypto.randomUUID)
     return crypto.randomUUID();
@@ -61,15 +72,6 @@ const upsertParticipant = (participants, userId, name, slot) => {
   return [...filtered, { id: userId, name, slot }];
 };
 
-const initialSession = {
-  id: "Test-Session-1",
-  title: "CL -",
-  subtitle: "-",
-  capacity: 10,
-  link: "https://www.auzora.de",
-  participants: [],
-};
-
 const App = () => {
   const [userId] = useState(getOrCreateUserId);
   const [name, setName] = useState(readName());
@@ -77,52 +79,40 @@ const App = () => {
   const [editingName, setEditingName] = useState(!readName());
   const [editingParticipantId, setEditingParticipantId] = useState(null);
   const [participantDraft, setParticipantDraft] = useState("");
-  const [session, setSession] = useState(initialSession);
+
   const [copied, setCopied] = useState(false);
+  const [session, setSession] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
 
-  const joined = session.participants.length;
-  const missing = Math.max(session.capacity - joined, 0);
+  const joined = session ? session.participants?.length : 0;
+  const missing = Math.max(session ? session.capacity - joined : 0, 0);
   const isFull = missing === 0;
   const [languageOpen, setLanguageOpen] = useState(false);
 
+  const setActiveSession = (nextSession) => {
+    setSession(nextSession);
+    setActiveSessionId(nextSession?.id || null);
+  };
+
+  const loadSessions = async () => {
+    const res = await fetch("/api/sessions");
+    if (!res.ok) throw new Error("Sessions API error");
+
+    const data = await res.json();
+    setSessions(data);
+    setActiveSession(data[0] || null);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const sessionsRes = await fetch("/api/sessions");
-        if (!sessionsRes.ok) throw new Error("Sessions API error");
-
-        const sessionsData = await sessionsRes.json();
-        setSessions(sessionsData);
-
-        setActiveSessionId(latestSession.id);
-
-        const sessionRes = await fetch(`/api/session/${latestSession.id}`);
-        if (!sessionRes.ok) throw new Error("Session API error");
-
-        const sessionData = await sessionRes.json();
-        setSession(sessionData);
-      } catch (e) {
-        console.warn("Failed to load session data, using initial data.", e);
-      }
-    };
-
-    load();
+    loadSessions().catch((e) =>
+      console.warn("Failed to load session data.", e),
+    );
   }, []);
 
-  const loadSessionById = async (id) => {
-    try {
-      setActiveSessionId(id);
-
-      const res = await fetch(`/api/session/${id}`);
-      if (!res.ok) throw new Error("Session API error");
-
-      const data = await res.json();
-      setSession(data);
-    } catch (e) {
-      console.warn("Failed to load selected session.", e);
-    }
+  const loadSessionById = (id) => {
+    const selected = sessions.find((s) => s.id === id);
+    if (selected) setActiveSession(selected);
   };
 
   const commitName = () => {
@@ -141,25 +131,15 @@ const App = () => {
     setParticipantDraft(participant.name);
   };
 
-  const saveParticipant = async (slot, finalName) => {
-    const res = await fetch(`/api/session/${session.id}/participants`, {
+  const saveParticipantToApi = (sessionId, participantId, name, slot) =>
+    requestJson(`/api/session/${sessionId}/participants`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
-        id: userId,
-        name: finalName,
+        id: participantId,
+        name,
         slot,
       }),
     });
-
-    if (!res.ok) {
-      throw new Error("Save failed");
-    }
-
-    return res.json();
-  };
 
   const copy = async () => {
     const text = buildSummary(session);
@@ -184,10 +164,12 @@ const App = () => {
   };
 
   const join = async (slot) => {
+    if (!session) return;
+
     const finalName = draft.trim() || name.trim();
 
     if (!finalName) {
-      setName("");
+      setEditingName(true);
       return;
     }
 
@@ -206,8 +188,18 @@ const App = () => {
     }));
 
     try {
-      const updatedSession = await saveParticipant(slot, finalName);
+      const updatedSession = await saveParticipantToApi(
+        session.id,
+        userId,
+        finalName,
+        slot,
+      );
+
       setSession(updatedSession);
+      setSessions((prev) =>
+        prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+      );
+
       navigator.vibrate?.(40);
     } catch (error) {
       console.warn("Failed to save participant.", error);
@@ -215,35 +207,25 @@ const App = () => {
   };
 
   const saveParticipantEdit = async (participant) => {
+    if (!session) return;
+
     const finalName = participantDraft.trim();
     if (!finalName) return;
-
-    setSession((prev) => ({
-      ...prev,
-      participants: prev.participants.map((p) =>
-        p.id === participant.id ? { ...p, name: finalName } : p,
-      ),
-    }));
 
     setEditingParticipantId(null);
 
     try {
-      const res = await fetch(`/api/session/${session.id}/participants`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: participant.id,
-          name: finalName,
-          slot: participant.slot,
-        }),
-      });
+      const updatedSession = await saveParticipantToApi(
+        session.id,
+        participant.id,
+        finalName,
+        participant.slot,
+      );
 
-      if (!res.ok) throw new Error("Save failed");
-
-      const updatedSession = await res.json();
       setSession(updatedSession);
+      setSessions((prev) =>
+        prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+      );
     } catch (error) {
       console.warn("Failed to update participant.", error);
     }
@@ -311,121 +293,125 @@ const App = () => {
             ))}
           </TabRow>
         )}
-        <Card>
-          <HeaderRow>
-            <div>
-              <Title>{session.title}</Title>
-              <Subtitle>{session.subtitle}</Subtitle>
-            </div>
-          </HeaderRow>
+        {session && (
+          <Card>
+            <HeaderRow>
+              <div>
+                <Title>{session.title}</Title>
+                <Subtitle>{session.subtitle}</Subtitle>
+              </div>
+            </HeaderRow>
 
-          <StatusBox $isFull={isFull}>
-            <StatusMain>
-              👥 {joined}/{session.capacity}
-            </StatusMain>
-            <StatusSub>
-              {isFull
-                ? t("status.full")
-                : t("capacity.remaining", { count: missing })}
-            </StatusSub>
-          </StatusBox>
+            <StatusBox $isFull={isFull}>
+              <StatusMain>
+                👥 {joined}/{session.capacity}
+              </StatusMain>
+              <StatusSub>
+                {isFull
+                  ? t("status.full")
+                  : t("capacity.remaining", { count: missing })}
+              </StatusSub>
+            </StatusBox>
 
-          <NameBox>
-            {editingName ? (
-              <NameForm>
-                <NameLabel>{t("user.nameLabel")}</NameLabel>
-                <NameInputRow>
-                  <NameInput
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") commitName();
-                    }}
-                    placeholder={t("user.namePlaceholder")}
-                    autoFocus
-                  />
-                  <SmallButton onClick={commitName}>OK</SmallButton>
-                </NameInputRow>
-              </NameForm>
-            ) : (
-              <NameDisplay onClick={() => setEditingName(true)}>
-                <span>
-                  {t("user.greeting")} <b>{name}</b> 👋
-                </span>
-                <FaEdit />
-              </NameDisplay>
-            )}
-          </NameBox>
+            <NameBox>
+              {editingName ? (
+                <NameForm>
+                  <NameLabel>{t("user.nameLabel")}</NameLabel>
+                  <NameInputRow>
+                    <NameInput
+                      value={draft}
+                      onChange={(event) => setDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") commitName();
+                      }}
+                      placeholder={t("user.namePlaceholder")}
+                      autoFocus
+                    />
+                    <SmallButton onClick={commitName}>OK</SmallButton>
+                  </NameInputRow>
+                </NameForm>
+              ) : (
+                <NameDisplay onClick={() => setEditingName(true)}>
+                  <span>
+                    {t("user.greeting")} <b>{name}</b> 👋
+                  </span>
+                  <FaEdit />
+                </NameDisplay>
+              )}
+            </NameBox>
 
-          <ActionGroup>
-            <FightButton onClick={() => join("15h")}>
-              {t("join.fight", { time: "15h" })}
-            </FightButton>
+            <ActionGroup>
+              <FightButton onClick={() => join("15h")}>
+                {t("join.fight", { time: "15h" })}
+              </FightButton>
 
-            <FightButton onClick={() => join("16h")}>
-              {t("join.fight", { time: "16h" })}
-            </FightButton>
+              <FightButton onClick={() => join("16h")}>
+                {t("join.fight", { time: "16h" })}
+              </FightButton>
 
-            <CancelButton onClick={() => join("NO")}>
-              {t("join.cancel")}
-            </CancelButton>
-          </ActionGroup>
-        </Card>
+              <CancelButton onClick={() => join("NO")}>
+                {t("join.cancel")}
+              </CancelButton>
+            </ActionGroup>
+          </Card>
+        )}
+        {session?.participants && (
+          <Card>
+            <SectionTitle>{t("list.title")}</SectionTitle>
+            <ParticipantList>
+              {session.participants.map((participant, index) => {
+                const isEditingThis = editingParticipantId === participant.id;
 
-        <Card>
-          <SectionTitle>{t("list.title")}</SectionTitle>
-          <ParticipantList>
-            {session.participants.map((participant, index) => {
-              const isEditingThis = editingParticipantId === participant.id;
-
-              return (
-                <ParticipantItem key={participant.id}>
-                  {isEditingThis ? (
-                    <NameInputRow>
-                      <NameInput
-                        value={participantDraft}
-                        onChange={(event) =>
-                          setParticipantDraft(event.target.value)
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter")
-                            saveParticipantEdit(participant);
-                          if (event.key === "Escape")
-                            setEditingParticipantId(null);
-                        }}
-                        autoFocus
-                      />
-                      <SmallButton
-                        onClick={() => saveParticipantEdit(participant)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter")
-                            saveParticipantEdit(participant);
-                          if (event.key === "Escape")
-                            setEditingParticipantId(null);
-                        }}
-                      >
-                        OK
-                      </SmallButton>
-                    </NameInputRow>
-                  ) : (
-                    <>
-                      <ParticipantName>
-                        {index + 1}. {participant.name}
-                      </ParticipantName>
-
-                      <ParticipantSlotEdit>
-                        <ParticipantSlot>{participant.slot}</ParticipantSlot>
-                        <FaEdit
-                          onClick={() => startEditParticipant(participant)}
+                return (
+                  <ParticipantItem key={participant.id}>
+                    {isEditingThis ? (
+                      <NameInputRow>
+                        <NameInput
+                          value={participantDraft}
+                          onChange={(event) =>
+                            setParticipantDraft(event.target.value)
+                          }
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter")
+                              saveParticipantEdit(participant);
+                            if (event.key === "Escape")
+                              setEditingParticipantId(null);
+                          }}
+                          autoFocus
                         />
-                      </ParticipantSlotEdit>
-                    </>
-                  )}
-                </ParticipantItem>
-              );
-            })}
-          </ParticipantList>
-        </Card>
+                        <SmallButton
+                          onClick={() => saveParticipantEdit(participant)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter")
+                              saveParticipantEdit(participant);
+                            if (event.key === "Escape")
+                              setEditingParticipantId(null);
+                          }}
+                        >
+                          OK
+                        </SmallButton>
+                      </NameInputRow>
+                    ) : (
+                      <>
+                        <ParticipantName>
+                          {index + 1}. {participant.name}
+                        </ParticipantName>
+
+                        <ParticipantSlotEdit>
+                          <ParticipantSlot>{participant.slot}</ParticipantSlot>
+                          <FaEdit
+                            onClick={() => startEditParticipant(participant)}
+                          />
+                        </ParticipantSlotEdit>
+                      </>
+                    )}
+                  </ParticipantItem>
+                );
+              })}
+            </ParticipantList>
+          </Card>
+        )}
+
         <CardButton
           style={{
             justifyContent: "center",
