@@ -31,5 +31,6 @@
   "empty.noParticipants": "Chưa có người tham gia",
   "empty.noSessions": "Chưa có buổi chơi nào",
   "user.greeting": "Xin chào",
-  "join.cancel": "Bận mất rồi"
+  "join.cancel": "Bận mất rồi",
+  "toast.copied": "Đã sao chép vào clipboard"
 }

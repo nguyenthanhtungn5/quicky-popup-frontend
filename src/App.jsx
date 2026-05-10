@@ -5,6 +5,7 @@ import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaGlobe } from "react-icons/fa";
+import { FaArchive } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -102,6 +103,24 @@ const App = () => {
     const data = await res.json();
     setSessions(data);
     setActiveSession(data[0] || null);
+  };
+
+  const archiveSession = async () => {
+    if (!session) return;
+
+    try {
+      const res = await fetch(`/api/session/${session.id}/archive`, {
+        method: "PATCH",
+      });
+
+      if (!res.ok) throw new Error("Archive failed");
+
+      const nextSessions = sessions.filter((s) => s.id !== session.id);
+      setSessions(nextSessions);
+      setActiveSession(nextSessions[0] || null);
+    } catch (e) {
+      console.warn("Failed to archive session.", e);
+    }
   };
 
   useEffect(() => {
@@ -300,6 +319,13 @@ const App = () => {
                 <Title>{session.title}</Title>
                 <Subtitle>{session.subtitle}</Subtitle>
               </div>
+              <ArchiveButton
+                type="button"
+                aria-label="Archive session"
+                onClick={archiveSession}
+              >
+                <FaArchive />
+              </ArchiveButton>
             </HeaderRow>
 
             <StatusBox $isFull={isFull}>
@@ -418,7 +444,7 @@ const App = () => {
             display: "flex",
             cursor: "pointer",
             fontWeight: "800",
-            background: "lightseagreen",
+            background: "cadetblue",
             color: "white",
           }}
           onClick={() => navigate("/create-session")}
@@ -505,7 +531,7 @@ const CopyButton = styled.button`
   gap: 8px;
   border: none;
   border-radius: 16px;
-  background: ${(props) => (props.copied === true ? "#22c55e" : "lightcoral")};
+  background: ${(props) => (props.copied === true ? "#22c55e" : "cadetblue")};
   color: white;
   padding: 12px 14px;
   font-weight: 800;
@@ -527,8 +553,28 @@ const CopyText = styled.span`
   line-height: 1;
 `;
 
-const HeaderRow = styled.div``;
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+`;
+const ArchiveButton = styled.button`
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 14px;
+  background: antiquewhite;
+  color: black;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 
+  &:active {
+    transform: scale(0.96);
+  }
+`;
 const Title = styled.h1`
   margin: 0;
   font-size: 30px;

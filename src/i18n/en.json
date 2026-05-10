@@ -31,5 +31,6 @@
   "empty.noParticipants": "No participants yet",
   "empty.noSessions": "No sessions available",
   "user.greeting": "Hello",
-  "join.cancel": "Can't make it"
+  "join.cancel": "Can't make it",
+  "toast.copied": "Copied to clipboard"
 }
