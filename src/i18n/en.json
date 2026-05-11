@@ -32,5 +32,7 @@
   "empty.noSessions": "No sessions available",
   "user.greeting": "Hello",
   "join.cancel": "Can't make it",
-  "toast.copied": "Copied to clipboard"
+  "toast.copied": "Copied to clipboard",
+  "user.nameLabel": "Name",
+  "user.namePlaceholder": "Enter your name"
 }

@@ -31,5 +31,8 @@
   "empty.noParticipants": "Noch keine Teilnehmer",
   "empty.noSessions": "Keine Sessions verfügbar",
   "user.greeting": "Hallo",
-  "join.cancel": "Bin leider beschäftigt"
+  "join.cancel": "Bin leider beschäftigt",
+  "toast.copied": "In die Zwischenablage kopiert",
+  "user.nameLabel": "Name",
+  "user.namePlaceholder": "Gib deinen Namen ein"
 }
