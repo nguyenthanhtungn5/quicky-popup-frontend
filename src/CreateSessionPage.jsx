@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const CreateSessionPage = () => {
   const navigate = useNavigate();
@@ -35,16 +36,17 @@ const CreateSessionPage = () => {
       console.warn(e);
     }
   };
+  const { t, i18n } = useTranslation();
 
   return (
     <Page>
       <Content>
         <Card>
-          <Title>Create Session</Title>
-          <Subtitle>Tạo buổi chơi mới</Subtitle>
+          <Title>{t("app.createSession")}</Title>
+          <Subtitle>{t("app.createNewSession")}</Subtitle>
 
           <FormGroup>
-            <Label>Titel</Label>
+            <Label>{t("session.title")}</Label>
             <Input
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -53,7 +55,7 @@ const CreateSessionPage = () => {
           </FormGroup>
 
           <FormGroup>
-            <Label>Subtitle</Label>
+            <Label>{t("session.subtitle")}</Label>
             <Input
               value={draft.subtitle}
               onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
@@ -62,7 +64,7 @@ const CreateSessionPage = () => {
           </FormGroup>
 
           <FormGroup>
-            <Label>Capacity</Label>
+            <Label>{t("session.maxCapacity")}</Label>
             <Input
               type="number"
               value={draft.capacity}

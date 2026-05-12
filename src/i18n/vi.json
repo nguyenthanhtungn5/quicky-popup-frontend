@@ -1,10 +1,10 @@
 {
   "app.createSession": "Tạo buổi chơi",
   "app.createNewSession": "Tạo buổi chơi mới",
-
+  "app.archiveSession": "Xoá buổi chơi này",
   "session.title": "Tiêu đề",
   "session.subtitle": "Mô tả",
-  "session.capacity": "Số lượng",
+  "session.maxCapacity": "Số lượng tối đa",
 
   "session.exampleTitle": "Ví dụ: CL 29.05",
   "session.exampleSubtitle": "15–16h · 16–18h",

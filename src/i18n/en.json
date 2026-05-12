@@ -1,10 +1,11 @@
 {
   "app.createSession": "Create session",
+  "app.archiveSession": "Archive session",
   "app.createNewSession": "Create new session",
 
   "session.title": "Title",
   "session.subtitle": "Subtitle",
-  "session.capacity": "Capacity",
+  "session.maxCapacity": "Maximum capacity",
 
   "session.exampleTitle": "Example: CL 29.05",
   "session.exampleSubtitle": "3–4 PM · 4–6 PM",

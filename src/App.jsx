@@ -4,8 +4,7 @@ import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaGlobe } from "react-icons/fa";
-import { FaArchive } from "react-icons/fa";
+import { FaGlobe, FaCalculator, FaArchive, FaPlus } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -289,14 +288,29 @@ const App = () => {
           </LanguageDropdown>
         )}
       </LanguageSwitcher>
-      <CopyButton onClick={copy} aria-label={t("button.copy")} copied={copied}>
-        {!copied ? (
-          <FaRegCopy size={"3em"} />
-        ) : (
-          <FaRegCheckCircle size={"3em"} />
-        )}
-      </CopyButton>
+      <TopActionRow>
+        <TopIconButton
+          type="button"
+          onClick={() => navigate("/create-session")}
+          aria-label={t("app.createSession")}
+          style={{ background: "darkseagreen" }}
+        >
+          <FaPlus size={"2em"} />
+        </TopIconButton>
 
+        <TopIconButton
+          type="button"
+          onClick={copy}
+          aria-label={t("button.copy")}
+          $copied={copied}
+        >
+          {!copied ? (
+            <FaRegCopy size={"2em"} />
+          ) : (
+            <FaRegCheckCircle size={"2em"} />
+          )}
+        </TopIconButton>
+      </TopActionRow>
       <Content>
         {sessions.length > 1 && (
           <TabRow>
@@ -319,13 +333,13 @@ const App = () => {
                 <Title>{session.title}</Title>
                 <Subtitle>{session.subtitle}</Subtitle>
               </div>
-              <ArchiveButton
+              <CalculationButton
                 type="button"
-                aria-label="Archive session"
-                onClick={archiveSession}
+                aria-label="Calculate session"
+                onClick={() => null}
               >
-                <FaArchive />
-              </ArchiveButton>
+                <FaCalculator />
+              </CalculationButton>
             </HeaderRow>
 
             <StatusBox $isFull={isFull}>
@@ -444,21 +458,47 @@ const App = () => {
             display: "flex",
             cursor: "pointer",
             fontWeight: "800",
-            background: "cadetblue",
+            background: "darkred",
             color: "white",
           }}
-          onClick={() => navigate("/create-session")}
+          onClick={() => archiveSession()}
         >
-          {t("app.createSession")}
+          {t("app.archiveSession")}
         </CardButton>
       </Content>
-
       {copied && <Toast>{t("toast.copied")}</Toast>}
     </Page>
   );
 };
 
 export default App;
+
+const TopActionRow = styled.div`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+`;
+
+const TopIconButton = styled.button`
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 16px;
+  background: ${({ $copied }) => ($copied ? "#22c55e" : "darkgreen")};
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.22);
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
 
 const TabRow = styled.div`
   display: flex;
@@ -499,6 +539,7 @@ const Page = styled.div`
 const Content = styled.main`
   max-width: 430px;
   margin: 0 auto;
+  margin-top: 1em;
   padding-top: 1em;
   padding-bottom: 32px;
 `;
@@ -559,12 +600,13 @@ const HeaderRow = styled.div`
   justify-content: space-between;
   gap: 12px;
 `;
-const ArchiveButton = styled.button`
+
+const CalculationButton = styled.button`
   flex: 0 0 auto;
   border: none;
   border-radius: 14px;
-  background: antiquewhite;
-  color: black;
+  background: coral;
+  color: white;
   width: 44px;
   height: 44px;
   display: grid;
@@ -575,6 +617,7 @@ const ArchiveButton = styled.button`
     transform: scale(0.96);
   }
 `;
+
 const Title = styled.h1`
   margin: 0;
   font-size: 30px;
@@ -594,7 +637,7 @@ const StatusBox = styled.div`
   margin-top: 20px;
   border-radius: 18px;
   padding: 16px;
-  background: ${({ $isFull }) => ($isFull ? "#dcfce7" : "#ffedd5")};
+  background: ${({ $isFull }) => ($isFull ? "#dcfce7" : "#fafafa")};
 `;
 
 const StatusMain = styled.div`

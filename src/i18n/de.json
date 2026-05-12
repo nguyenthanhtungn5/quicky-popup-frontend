@@ -1,10 +1,11 @@
 {
   "app.createSession": "Session erstellen",
+  "app.archiveSession": "Session archivieren",
   "app.createNewSession": "Neue Session erstellen",
 
   "session.title": "Titel",
   "session.subtitle": "Untertitel",
-  "session.capacity": "Kapazität",
+  "session.maxCapacity": "Maximale Kapazität",
 
   "session.exampleTitle": "z. B.: CL 29.05",
   "session.exampleSubtitle": "15–16 Uhr · 16–18 Uhr",
