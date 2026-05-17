@@ -5,6 +5,7 @@ import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaGlobe, FaCalculator, FaArchive, FaPlus } from "react-icons/fa";
+import Calculation from "./CalculationPage";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -336,7 +337,7 @@ const App = () => {
               <CalculationButton
                 type="button"
                 aria-label="Calculate session"
-                onClick={() => null}
+                onClick={() => navigate("/calculation", { state: { session } })}
               >
                 <FaCalculator />
               </CalculationButton>
@@ -748,7 +749,7 @@ const CancelButton = styled(BaseActionButton)`
   font-family: inherit;
 `;
 
-const SectionTitle = styled.h2`
+export const SectionTitle = styled.h2`
   margin: 0;
   font-size: 18px;
   font-weight: 900;

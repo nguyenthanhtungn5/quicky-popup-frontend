@@ -2,41 +2,69 @@ import { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { SectionTitle } from "./App";
 
 const CreateSessionPage = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
+  const [rawText, setRawText] = useState("");
+  const [loadingParse, setLoadingParse] = useState(false);
 
   const [draft, setDraft] = useState({
     title: "",
     subtitle: "",
     capacity: 10,
+    additionalInfo: "",
+    slots: [],
   });
+  const parseSession = async () => {
+    setLoadingParse(true);
 
-  const createSession = async () => {
     try {
-      const res = await fetch("/api/session", {
+      const res = await fetch("/api/parse-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title: draft.title || "CL -",
-          subtitle: draft.subtitle || "-",
-          capacity: Number(draft.capacity) || 10,
-          link: window.location.origin,
-        }),
+        body: JSON.stringify({ text: rawText }),
       });
 
-      if (!res.ok) {
-        throw new Error("Create session failed");
-      }
+      if (!res.ok) throw new Error("Parse failed");
 
-      navigate("/");
+      const data = await res.json();
+
+      setDraft({
+        title: data.title || "",
+        subtitle: data.subtitle || "",
+        capacity: data.capacity || 10,
+        additionalInfo: data.additionalInfo || "",
+        slots: data.slots || [],
+      });
     } catch (e) {
       console.warn(e);
+    } finally {
+      setLoadingParse(false);
     }
   };
-  const { t, i18n } = useTranslation();
+
+  const createSession = async () => {
+    const res = await fetch("/api/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...draft,
+        capacity: Number(draft.capacity) || 10,
+        link: window.location.origin,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Create session failed");
+
+    navigate("/");
+  };
 
   return (
     <Page>
@@ -46,41 +74,99 @@ const CreateSessionPage = () => {
           <Subtitle>{t("app.createNewSession")}</Subtitle>
 
           <FormGroup>
-            <Label>{t("session.title")}</Label>
+            <Label>Admin Text</Label>
+            <TextArea
+              value={rawText}
+              onChange={(e) => setRawText(e.target.value)}
+              placeholder={`CL 14.05
+1 sân 13-16h
+2 sân 16-18h
+max 12ng
+thêm ng thêm sân`}
+            />
+          </FormGroup>
+
+          <CreateButton onClick={parseSession} disabled={loadingParse}>
+            {loadingParse ? "Parsing..." : "AI Parse"}
+          </CreateButton>
+
+          <FormGroup>
+            <Label>Title</Label>
             <Input
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-              placeholder="Ví dụ: CL 29.05"
             />
           </FormGroup>
 
           <FormGroup>
-            <Label>{t("session.subtitle")}</Label>
+            <Label>Subtitle</Label>
             <Input
               value={draft.subtitle}
               onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
-              placeholder="15–16h · 16–18h"
             />
           </FormGroup>
 
           <FormGroup>
-            <Label>{t("session.maxCapacity")}</Label>
+            <Label>Capacity</Label>
             <Input
               type="number"
               value={draft.capacity}
               onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  capacity: Number(e.target.value),
-                })
+                setDraft({ ...draft, capacity: Number(e.target.value) })
               }
             />
           </FormGroup>
 
-          <ButtonGroup>
-            <CancelButton onClick={() => navigate("/")}>Cancel</CancelButton>
+          <FormGroup>
+            <Label>Zusatzinformationen</Label>
+            <TextArea
+              value={draft.additionalInfo}
+              onChange={(e) =>
+                setDraft({ ...draft, additionalInfo: e.target.value })
+              }
+            />
+          </FormGroup>
 
+          <SectionTitle>Slots</SectionTitle>
+
+          {draft.slots.map((slot, index) => (
+            <SlotRow key={index}>
+              <Input
+                value={slot.startTime}
+                onChange={(e) => {
+                  const next = [...draft.slots];
+                  next[index].startTime = e.target.value;
+                  setDraft({ ...draft, slots: next });
+                }}
+                placeholder="Start"
+              />
+
+              <Input
+                value={slot.endTime}
+                onChange={(e) => {
+                  const next = [...draft.slots];
+                  next[index].endTime = e.target.value;
+                  setDraft({ ...draft, slots: next });
+                }}
+                placeholder="Ende"
+              />
+
+              <Input
+                type="number"
+                value={slot.courtCount}
+                onChange={(e) => {
+                  const next = [...draft.slots];
+                  next[index].courtCount = Number(e.target.value);
+                  setDraft({ ...draft, slots: next });
+                }}
+                placeholder="Plätze"
+              />
+            </SlotRow>
+          ))}
+
+          <ButtonGroup>
             <CreateButton onClick={createSession}>Create</CreateButton>
+            <CancelButton onClick={() => navigate("/")}>Cancel</CancelButton>
           </ButtonGroup>
         </Card>
       </Content>
@@ -186,4 +272,29 @@ const CreateButton = styled(BaseButton)`
 const CancelButton = styled(BaseButton)`
   background: #e4e4e7;
   color: #3f3f46;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  min-height: 140px;
+  box-sizing: border-box;
+  border: 1px solid #d4d4d8;
+  border-radius: 14px;
+  padding: 13px 14px;
+  font-size: 16px;
+  resize: vertical;
+  font-family: inherit;
+  outline: none;
+
+  &:focus {
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+  }
+`;
+
+const SlotRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  gap: 8px;
+  margin-bottom: 10px;
 `;
