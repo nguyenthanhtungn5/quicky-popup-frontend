@@ -74,6 +74,9 @@ const upsertParticipant = (participants, userId, name, slot) => {
 };
 
 const App = () => {
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.resolvedLanguage || "vi";
   const [userId] = useState(getOrCreateUserId);
   const [name, setName] = useState(readName());
   const [draft, setDraft] = useState(readName());
@@ -90,6 +93,16 @@ const App = () => {
   const missing = Math.max(session ? session.capacity - joined : 0, 0);
   const isFull = missing === 0;
   const [languageOpen, setLanguageOpen] = useState(false);
+
+  // slots
+  const [selectedSlotIds, setSelectedSlotIds] = useState([]);
+  const toggleSlot = (slotId) => {
+    setSelectedSlotIds((prev) =>
+      prev.includes(slotId)
+        ? prev.filter((id) => id !== slotId)
+        : [...prev, slotId],
+    );
+  };
 
   const setActiveSession = (nextSession) => {
     setSession(nextSession);
@@ -148,15 +161,22 @@ const App = () => {
   const startEditParticipant = (participant) => {
     setEditingParticipantId(participant.id);
     setParticipantDraft(participant.name);
+    setParticipantSlotIdsDraft(participant.slotIds || []);
   };
-
-  const saveParticipantToApi = (sessionId, participantId, name, slot) =>
+  const toggleParticipantSlotDraft = (slotId) => {
+    setParticipantSlotIdsDraft((prev) =>
+      prev.includes(slotId)
+        ? prev.filter((id) => id !== slotId)
+        : [...prev, slotId],
+    );
+  };
+  const saveParticipantToApi = (sessionId, participantId, name, slotIds) =>
     requestJson(`/api/session/${sessionId}/participants`, {
       method: "POST",
       body: JSON.stringify({
         id: participantId,
         name,
-        slot,
+        slotIds,
       }),
     });
 
@@ -182,7 +202,44 @@ const App = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const join = async (slot) => {
+  const join = async () => {
+    if (!session) return;
+
+    const finalName = draft.trim() || name.trim();
+
+    if (!finalName) {
+      setEditingName(true);
+      return;
+    }
+
+    if (selectedSlotIds.length === 0) {
+      return;
+    }
+
+    saveName(finalName);
+    setName(finalName);
+    setDraft(finalName);
+
+    const updatedSession = await requestJson(
+      `/api/session/${session.id}/participants`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: userId,
+          name: finalName,
+          slotIds: selectedSlotIds,
+        }),
+      },
+    );
+
+    setSession(updatedSession);
+    setSessions((prev) =>
+      prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+    );
+    setSelectedSlotIds([]);
+  };
+
+  const joinWaitlist = async () => {
     if (!session) return;
 
     const finalName = draft.trim() || name.trim();
@@ -196,32 +253,25 @@ const App = () => {
     setName(finalName);
     setDraft(finalName);
 
-    setSession((prev) => ({
-      ...prev,
-      participants: upsertParticipant(
-        prev.participants,
-        userId,
-        finalName,
-        slot,
-      ),
-    }));
-
     try {
-      const updatedSession = await saveParticipantToApi(
-        session.id,
-        userId,
-        finalName,
-        slot,
+      const updatedSession = await requestJson(
+        `/api/session/${session.id}/waitlist`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            id: userId,
+            name: finalName,
+            note: "",
+          }),
+        },
       );
 
       setSession(updatedSession);
       setSessions((prev) =>
         prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
       );
-
-      navigator.vibrate?.(40);
     } catch (error) {
-      console.warn("Failed to save participant.", error);
+      console.warn("Failed to join waitlist.", error);
     }
   };
 
@@ -238,7 +288,7 @@ const App = () => {
         session.id,
         participant.id,
         finalName,
-        participant.slot,
+        participantSlotIdsDraft,
       );
 
       setSession(updatedSession);
@@ -249,9 +299,8 @@ const App = () => {
       console.warn("Failed to update participant.", error);
     }
   };
-  const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const currentLanguage = i18n.resolvedLanguage || "vi";
+
+  const [participantSlotIdsDraft, setParticipantSlotIdsDraft] = useState([]);
 
   return (
     <Page>
@@ -382,15 +431,31 @@ const App = () => {
             </NameBox>
 
             <ActionGroup>
-              <FightButton onClick={() => join("15h")}>
-                {t("join.fight", { time: "15h" })}
-              </FightButton>
+              {!isFull ? (
+                <>
+                  <SlotGrid>
+                    {session.slots?.map((slot) => (
+                      <SlotButton
+                        key={slot.id}
+                        type="button"
+                        $active={selectedSlotIds.includes(slot.id)}
+                        onClick={() => toggleSlot(slot.id)}
+                      >
+                        {slot.startTime}–{slot.endTime}
+                        <SlotMeta>{slot.courtCount} sân</SlotMeta>
+                      </SlotButton>
+                    ))}
+                  </SlotGrid>
 
-              <FightButton onClick={() => join("16h")}>
-                {t("join.fight", { time: "16h" })}
-              </FightButton>
+                  <FightButton onClick={join}>🔥 Fight!</FightButton>
+                </>
+              ) : (
+                <WaitlistButton onClick={joinWaitlist}>
+                  🕒 Join Wartelist
+                </WaitlistButton>
+              )}
 
-              <CancelButton onClick={() => join("NO")}>
+              <CancelButton onClick={() => setSelectedSlotIds([])}>
                 {t("join.cancel")}
               </CancelButton>
             </ActionGroup>
@@ -406,45 +471,67 @@ const App = () => {
                 return (
                   <ParticipantItem key={participant.id}>
                     {isEditingThis ? (
-                      <NameInputRow>
-                        <NameInput
-                          value={participantDraft}
-                          onChange={(event) =>
-                            setParticipantDraft(event.target.value)
-                          }
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter")
-                              saveParticipantEdit(participant);
-                            if (event.key === "Escape")
-                              setEditingParticipantId(null);
-                          }}
-                          autoFocus
-                        />
-                        <SmallButton
-                          onClick={() => saveParticipantEdit(participant)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter")
-                              saveParticipantEdit(participant);
-                            if (event.key === "Escape")
-                              setEditingParticipantId(null);
-                          }}
-                        >
-                          OK
-                        </SmallButton>
-                      </NameInputRow>
+                      <ParticipantEditBox>
+                        <NameInputRow>
+                          <NameInput
+                            value={participantDraft}
+                            onChange={(event) =>
+                              setParticipantDraft(event.target.value)
+                            }
+                            autoFocus
+                          />
+                          <SmallButton
+                            onClick={() => saveParticipantEdit(participant)}
+                          >
+                            OK
+                          </SmallButton>
+                        </NameInputRow>
+
+                        <EditSlotGrid>
+                          {session.slots?.map((slot) => (
+                            <EditSlotButton
+                              key={slot.id}
+                              type="button"
+                              $active={participantSlotIdsDraft.includes(
+                                slot.id,
+                              )}
+                              onClick={() =>
+                                toggleParticipantSlotDraft(slot.id)
+                              }
+                            >
+                              <span>
+                                {slot.startTime}–{slot.endTime}
+                              </span>
+                              <small>{slot.courtCount} sân</small>
+                            </EditSlotButton>
+                          ))}
+                        </EditSlotGrid>
+                      </ParticipantEditBox>
                     ) : (
-                      <>
+                      <ParticipantViewRow>
                         <ParticipantName>
                           {index + 1}. {participant.name}
                         </ParticipantName>
 
                         <ParticipantSlotEdit>
-                          <ParticipantSlot>{participant.slot}</ParticipantSlot>
+                          <ParticipantSlot>
+                            {participant.slotIds
+                              ?.map((slotId) => {
+                                const slot = session.slots?.find(
+                                  (s) => s.id === slotId,
+                                );
+                                return slot
+                                  ? `${slot.startTime}–${slot.endTime}`
+                                  : null;
+                              })
+                              .filter(Boolean)
+                              .join(", ") || "-"}
+                          </ParticipantSlot>
                           <FaEdit
                             onClick={() => startEditParticipant(participant)}
                           />
                         </ParticipantSlotEdit>
-                      </>
+                      </ParticipantViewRow>
                     )}
                   </ParticipantItem>
                 );
@@ -452,7 +539,21 @@ const App = () => {
             </ParticipantList>
           </Card>
         )}
-
+        {session?.waitlist?.length > 0 && (
+          <Card>
+            <SectionTitle>Wartelist</SectionTitle>
+            <ParticipantList>
+              {session.waitlist.map((p, index) => (
+                <ParticipantItem key={p.id}>
+                  <ParticipantName>
+                    {index + 1}. {p.name}
+                  </ParticipantName>
+                  <ParticipantSlot>{p.note}</ParticipantSlot>
+                </ParticipantItem>
+              ))}
+            </ParticipantList>
+          </Card>
+        )}
         <CardButton
           style={{
             justifyContent: "center",
@@ -763,13 +864,29 @@ const ParticipantList = styled.div`
 `;
 
 const ParticipantItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   border-radius: 16px;
   padding: 13px 14px;
   background: ${({ $isMe }) => ($isMe ? "#ffedd5" : "#fafafa")};
   font-weight: ${({ $isMe }) => ($isMe ? 900 : 600)};
+`;
+
+const ParticipantViewRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const ParticipantEditBox = styled.div`
+  display: grid;
+  gap: 12px;
+  width: 100%;
+`;
+
+const EditSlotGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
 `;
 
 const ParticipantName = styled.span`
@@ -793,6 +910,29 @@ const ParticipantSlotEdit = styled.div`
   color: #71717a;
   font-size: 14px;
   cursor: pointer;
+`;
+
+const EditSlotButton = styled.button`
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 12px;
+  font-weight: 900;
+  background: ${({ $active }) => ($active ? "#f97316" : "#e4e4e7")};
+  color: ${({ $active }) => ($active ? "white" : "#3f3f46")};
+  cursor: pointer;
+
+  span {
+    display: block;
+    font-size: 15px;
+  }
+
+  small {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    opacity: 0.8;
+  }
 `;
 
 const Toast = styled.div`
@@ -880,4 +1020,37 @@ const LanguageOption = styled.button`
   &:active {
     transform: scale(0.98);
   }
+`;
+
+const SlotGrid = styled.div`
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+`;
+
+const SlotButton = styled.button`
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 14px;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  background: ${({ $active }) => ($active ? "#f97316" : "#e4e4e7")};
+  color: ${({ $active }) => ($active ? "white" : "#3f3f46")};
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const SlotMeta = styled.div`
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.8;
+`;
+
+const WaitlistButton = styled(BaseActionButton)`
+  background: #facc15;
+  color: #18181b;
 `;

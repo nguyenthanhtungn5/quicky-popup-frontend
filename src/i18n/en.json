@@ -35,5 +35,6 @@
   "join.cancel": "Can't make it",
   "toast.copied": "Copied to clipboard",
   "user.nameLabel": "Name",
-  "user.namePlaceholder": "Enter your name"
+  "user.namePlaceholder": "Enter your name",
+  "status.full": "Full – waitlist only"
 }

@@ -35,5 +35,6 @@
   "join.cancel": "Bin leider beschäftigt",
   "toast.copied": "In die Zwischenablage kopiert",
   "user.nameLabel": "Name",
-  "user.namePlaceholder": "Gib deinen Namen ein"
+  "user.namePlaceholder": "Gib deinen Namen ein",
+  "status.full": "Voll – nur Warteliste"
 }

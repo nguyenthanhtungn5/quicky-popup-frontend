@@ -34,5 +34,6 @@
   "join.cancel": "Bận mất rồi",
   "toast.copied": "Đã sao chép vào clipboard",
   "user.nameLabel": "Tên",
-  "user.namePlaceholder": "Nhập tên của bạn"
+  "user.namePlaceholder": "Nhập tên của bạn",
+  "status.full": "đủ rồi"
 }

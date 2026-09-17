@@ -17,6 +17,8 @@ const CreateSessionPage = () => {
     capacity: 10,
     additionalInfo: "",
     slots: [],
+    participants: [],
+    waitlist: [],
   });
   const parseSession = async () => {
     setLoadingParse(true);
@@ -40,6 +42,8 @@ const CreateSessionPage = () => {
         capacity: data.capacity || 10,
         additionalInfo: data.additionalInfo || "",
         slots: data.slots || [],
+        participants: data.participants || [],
+        waitlist: data.waitlist || [],
       });
     } catch (e) {
       console.warn(e);
@@ -163,7 +167,22 @@ thêm ng thêm sân`}
               />
             </SlotRow>
           ))}
+          <SectionTitle>Participants</SectionTitle>
+          {draft.participants.map((p, index) => (
+            <SlotRow key={index}>
+              <Input value={p.name} readOnly />
+              <Input value={p.startTime} readOnly />
+              <Input value={p.endTime} readOnly />
+            </SlotRow>
+          ))}
 
+          <SectionTitle>Waitlist</SectionTitle>
+          {draft.waitlist.map((p, index) => (
+            <SlotRow key={index}>
+              <Input value={p.name} readOnly />
+              <Input value={p.note} readOnly />
+            </SlotRow>
+          ))}
           <ButtonGroup>
             <CreateButton onClick={createSession}>Create</CreateButton>
             <CancelButton onClick={() => navigate("/")}>Cancel</CancelButton>
