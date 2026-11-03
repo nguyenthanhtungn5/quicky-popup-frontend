@@ -344,7 +344,7 @@ const App = () => {
               type="button"
               onClick={() => navigate("/create-session")}
               aria-label={t("app.createSession")}
-              style={{ background: "black" }}
+              style={{ background: "darkgreen" }}
             >
               <FaPlus size={"2em"} />
             </TopIconButton>
@@ -727,8 +727,8 @@ const NameInput = styled.input`
   outline: none;
 
   &:focus {
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+    border-color: darkgreen;
+    box-shadow: 0 0 0 3px rgba(14, 118, 14, 0.14);
   }
 `;
 
@@ -1038,7 +1038,7 @@ const EmptyButton = styled.button`
   border-radius: 16px;
   padding: 14px 18px;
 
-  background: #18181b;
+  background: darkgreen;
   color: white;
 
   font-size: 16px;

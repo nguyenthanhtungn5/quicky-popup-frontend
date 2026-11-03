@@ -306,8 +306,8 @@ const Input = styled.input`
   box-sizing: border-box;
 
   &:focus {
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+    border-color: darkgreen;
+    box-shadow: 0 0 0 3px rgba(14, 118, 14, 0.14);
   }
 `;
 
@@ -332,7 +332,7 @@ const BaseButton = styled.button`
 `;
 
 const CreateButton = styled(BaseButton)`
-  background: lightseagreen;
+  background: darkgreen;
   color: white;
 `;
 
@@ -354,8 +354,8 @@ const TextArea = styled.textarea`
   outline: none;
 
   &:focus {
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+    border-color: darkgreen;
+    box-shadow: 0 0 0 3px rgba(14, 118, 14, 0.14);
   }
 `;
 
