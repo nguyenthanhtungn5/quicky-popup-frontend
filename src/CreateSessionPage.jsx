@@ -6,7 +6,7 @@ import { SectionTitle } from "./App";
 
 const CreateSessionPage = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const [rawText, setRawText] = useState("");
   const [loadingParse, setLoadingParse] = useState(false);
@@ -182,7 +182,7 @@ const CreateSessionPage = () => {
               <Input value={p.note} readOnly />
             </SlotRow>
           ))}
-
+          {}
           <ButtonGroup>
             <CreateButton onClick={createSession}>
               {t("button.create")}

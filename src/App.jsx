@@ -339,27 +339,30 @@ const App = () => {
         )}
       </LanguageSwitcher>
       <TopActionRow>
-        <TopIconButton
-          type="button"
-          onClick={() => navigate("/create-session")}
-          aria-label={t("app.createSession")}
-          style={{ background: "black" }}
-        >
-          <FaPlus size={"2em"} />
-        </TopIconButton>
-
-        <TopIconButton
-          type="button"
-          onClick={copy}
-          aria-label={t("button.copy")}
-          $copied={copied}
-        >
-          {!copied ? (
-            <FaRegCopy size={"2em"} />
-          ) : (
-            <FaRegCheckCircle size={"2em"} />
-          )}
-        </TopIconButton>
+        {session?.waitlist?.length > 0 && (
+          <>
+            <TopIconButton
+              type="button"
+              onClick={() => navigate("/create-session")}
+              aria-label={t("app.createSession")}
+              style={{ background: "black" }}
+            >
+              <FaPlus size={"2em"} />
+            </TopIconButton>
+            <TopIconButton
+              type="button"
+              onClick={copy}
+              aria-label={t("button.copy")}
+              $copied={copied}
+            >
+              {!copied ? (
+                <FaRegCopy size={"2em"} />
+              ) : (
+                <FaRegCheckCircle size={"2em"} />
+              )}
+            </TopIconButton>
+          </>
+        )}
       </TopActionRow>
       <Content>
         {sessions.length > 1 && (
