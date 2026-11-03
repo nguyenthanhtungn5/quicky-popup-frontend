@@ -4,8 +4,7 @@ import { FaRegCopy, FaRegCheckCircle } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaGlobe, FaCalculator, FaArchive, FaPlus } from "react-icons/fa";
-import Calculation from "./CalculationPage";
+import { FaGlobe, FaCalculator, FaPlus } from "react-icons/fa";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -897,14 +896,14 @@ const Toast = styled.div`
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
 `;
 
-const LanguageSwitcher = styled.div`
+export const LanguageSwitcher = styled.div`
   position: static;
   top: 16px;
   left: 16px;
   z-index: 20;
 `;
 
-const LanguageIconButton = styled.button`
+export const LanguageIconButton = styled.button`
   height: 2em;
   min-width: 52px;
   display: flex;
@@ -926,12 +925,12 @@ const LanguageIconButton = styled.button`
   }
 `;
 
-const CurrentLanguage = styled.span`
+export const CurrentLanguage = styled.span`
   font-size: 12px;
   line-height: 1;
 `;
 
-const LanguageDropdown = styled.div`
+export const LanguageDropdown = styled.div`
   position: absolute;
   top: 60px;
   left: 0;
@@ -942,7 +941,7 @@ const LanguageDropdown = styled.div`
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
 `;
 
-const LanguageOption = styled.button`
+export const LanguageOption = styled.button`
   width: 100%;
   display: flex;
   align-items: center;

@@ -3,11 +3,20 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SectionTitle } from "./App";
+import {
+  LanguageIconButton,
+  LanguageSwitcher,
+  CurrentLanguage,
+  LanguageDropdown,
+  LanguageOption,
+} from "./App";
+import { FaGlobe } from "react-icons/fa";
 
 const CreateSessionPage = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.resolvedLanguage || "vi";
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [rawText, setRawText] = useState("");
   const [loadingParse, setLoadingParse] = useState(false);
 
@@ -72,6 +81,40 @@ const CreateSessionPage = () => {
 
   return (
     <Page>
+      <LanguageSwitcher>
+        <LanguageIconButton
+          type="button"
+          aria-label={t("language.select")}
+          onClick={() => setLanguageOpen((prev) => !prev)}
+        >
+          <FaGlobe />
+          <CurrentLanguage>{currentLanguage.toUpperCase()}</CurrentLanguage>
+        </LanguageIconButton>
+
+        {languageOpen && (
+          <LanguageDropdown>
+            {[
+              { key: "vi", label: "Tiếng Việt" },
+              { key: "de", label: "Deutsch" },
+              { key: "en", label: "English" },
+            ].map((lang) => (
+              <LanguageOption
+                key={lang.key}
+                type="button"
+                $active={currentLanguage === lang.key}
+                onClick={() => {
+                  i18n.changeLanguage(lang.key);
+                  localStorage.setItem("language", lang.key);
+                  setLanguageOpen(false);
+                }}
+              >
+                <span>{lang.label}</span>
+                {i18n.language === lang.key && <span>✓</span>}
+              </LanguageOption>
+            ))}
+          </LanguageDropdown>
+        )}
+      </LanguageSwitcher>
       <Content>
         <Card>
           <Title>{t("app.createSession")}</Title>
