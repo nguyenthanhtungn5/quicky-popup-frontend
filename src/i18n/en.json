@@ -1,6 +1,8 @@
 {
   "app.createSession": "Create session",
   "app.archiveSession": "Archive session",
+  "app.noSessionsTitle": "No sessions available",
+  "app.noSessionsDescription": "Create your first session and share the link with everyone.",
   "app.createNewSession": "Create new session",
 
   "session.title": "Title",
@@ -9,12 +11,22 @@
 
   "session.exampleTitle": "Example: CL 29.05",
   "session.exampleSubtitle": "3–4 PM · 4–6 PM",
+  "session.adminText": "Organizer text",
+  "session.adminTextPlaceholder": "e.g. Badminton 14.05\n1 court 13-16\n2 courts 16-18\nMax. 12 players\nAdd another court if needed",
+  "session.additionalInfo": "Additional information",
+  "session.slots": "Time slots",
+  "session.startTime": "Start",
+  "session.endTime": "End",
+  "session.courts": "Courts",
+  "session.participants": "Participants",
+  "session.waitlist": "Waitlist",
 
   "button.create": "Create",
   "button.cancel": "Cancel",
   "button.edit": "Edit",
   "button.delete": "Delete",
   "button.copy": "Copy",
+  "button.aiParse": "Parse with AI",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "You're out",
@@ -28,6 +40,7 @@
   "status.loading": "Loading...",
   "status.error": "Something went wrong",
   "status.success": "Saved successfully",
+  "status.parsing": "Processing...",
 
   "empty.noParticipants": "No participants yet",
   "empty.noSessions": "No sessions available",

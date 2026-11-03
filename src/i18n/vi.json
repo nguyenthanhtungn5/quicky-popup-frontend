@@ -1,19 +1,31 @@
 {
   "app.createSession": "Tạo buổi chơi",
   "app.createNewSession": "Tạo buổi chơi mới",
-  "app.archiveSession": "Xoá buổi chơi này",
+  "app.archiveSession": "Xóa buổi chơi này",
+  "app.noSessionsTitle": "Chưa có buổi chơi nào",
+  "app.noSessionsDescription": "Tạo buổi chơi đầu tiên và copy link cho mọi người nhé <3",
   "session.title": "Tiêu đề",
   "session.subtitle": "Mô tả",
   "session.maxCapacity": "Số lượng tối đa",
 
   "session.exampleTitle": "Ví dụ: CL 29.05",
   "session.exampleSubtitle": "15–16h · 16–18h",
+  "session.adminText": "Nội dung buổi chơi",
+  "session.adminTextPlaceholder": "VD: CL 14.05\n1 sân 13-16h\n2 sân 16-18h\nTối đa 12 người\nĐông người thì thêm sân",
+  "session.additionalInfo": "Thông tin thêm",
+  "session.slots": "Khung giờ",
+  "session.startTime": "Bắt đầu",
+  "session.endTime": "Kết thúc",
+  "session.courts": "Sân",
+  "session.participants": "Người tham gia",
+  "session.waitlist": "Danh sách chờ",
 
   "button.create": "Tạo",
   "button.cancel": "Huỷ",
   "button.edit": "Chỉnh sửa",
-  "button.delete": "Xoá",
+  "button.delete": "Xóa",
   "button.copy": "Sao chép",
+  "button.aiParse": "AI đọc nội dung",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "Bạn mất rồi",
@@ -22,11 +34,12 @@
   "list.title": "Danh sách",
 
   "capacity.current": "{{current}}/{{max}}",
-  "capacity.remaining": "Còn thiếu {{count}}",
+  "capacity.remaining": "Còn {{count}} slot",
 
   "status.loading": "Đang tải...",
   "status.error": "Có lỗi xảy ra",
   "status.success": "Lưu thành công",
+  "status.parsing": "Đang xử lý...",
 
   "empty.noParticipants": "Chưa có người tham gia",
   "empty.noSessions": "Chưa có buổi chơi nào",

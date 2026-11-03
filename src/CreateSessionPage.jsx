@@ -78,24 +78,20 @@ const CreateSessionPage = () => {
           <Subtitle>{t("app.createNewSession")}</Subtitle>
 
           <FormGroup>
-            <Label>Admin Text</Label>
+            <Label>{t("session.adminText")}</Label>
             <TextArea
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder={`CL 14.05
-1 sân 13-16h
-2 sân 16-18h
-max 12ng
-thêm ng thêm sân`}
+              placeholder={t("session.adminTextPlaceholder")}
             />
           </FormGroup>
 
           <CreateButton onClick={parseSession} disabled={loadingParse}>
-            {loadingParse ? "Parsing..." : "AI Parse"}
+            {loadingParse ? t("status.parsing") : t("button.aiParse")}
           </CreateButton>
 
           <FormGroup>
-            <Label>Title</Label>
+            <Label>{t("session.title")}</Label>
             <Input
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -103,7 +99,7 @@ thêm ng thêm sân`}
           </FormGroup>
 
           <FormGroup>
-            <Label>Subtitle</Label>
+            <Label>{t("session.subtitle")}</Label>
             <Input
               value={draft.subtitle}
               onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
@@ -111,7 +107,7 @@ thêm ng thêm sân`}
           </FormGroup>
 
           <FormGroup>
-            <Label>Capacity</Label>
+            <Label>{t("session.capacity")}</Label>
             <Input
               type="number"
               value={draft.capacity}
@@ -122,7 +118,7 @@ thêm ng thêm sân`}
           </FormGroup>
 
           <FormGroup>
-            <Label>Zusatzinformationen</Label>
+            <Label>{t("session.additionalInfo")}</Label>
             <TextArea
               value={draft.additionalInfo}
               onChange={(e) =>
@@ -131,7 +127,7 @@ thêm ng thêm sân`}
             />
           </FormGroup>
 
-          <SectionTitle>Slots</SectionTitle>
+          <SectionTitle>{t("session.slots")}</SectionTitle>
 
           {draft.slots.map((slot, index) => (
             <SlotRow key={index}>
@@ -142,7 +138,7 @@ thêm ng thêm sân`}
                   next[index].startTime = e.target.value;
                   setDraft({ ...draft, slots: next });
                 }}
-                placeholder="Start"
+                placeholder={t("session.startTime")}
               />
 
               <Input
@@ -152,7 +148,7 @@ thêm ng thêm sân`}
                   next[index].endTime = e.target.value;
                   setDraft({ ...draft, slots: next });
                 }}
-                placeholder="Ende"
+                placeholder={t("session.endTime")}
               />
 
               <Input
@@ -163,11 +159,13 @@ thêm ng thêm sân`}
                   next[index].courtCount = Number(e.target.value);
                   setDraft({ ...draft, slots: next });
                 }}
-                placeholder="Plätze"
+                placeholder={t("session.courts")}
               />
             </SlotRow>
           ))}
-          <SectionTitle>Participants</SectionTitle>
+
+          <SectionTitle>{t("session.participants")}</SectionTitle>
+
           {draft.participants.map((p, index) => (
             <SlotRow key={index}>
               <Input value={p.name} readOnly />
@@ -176,16 +174,23 @@ thêm ng thêm sân`}
             </SlotRow>
           ))}
 
-          <SectionTitle>Waitlist</SectionTitle>
+          <SectionTitle>{t("session.waitlist")}</SectionTitle>
+
           {draft.waitlist.map((p, index) => (
             <SlotRow key={index}>
               <Input value={p.name} readOnly />
               <Input value={p.note} readOnly />
             </SlotRow>
           ))}
+
           <ButtonGroup>
-            <CreateButton onClick={createSession}>Create</CreateButton>
-            <CancelButton onClick={() => navigate("/")}>Cancel</CancelButton>
+            <CreateButton onClick={createSession}>
+              {t("button.create")}
+            </CreateButton>
+
+            <CancelButton onClick={() => navigate("/")}>
+              {t("button.cancel")}
+            </CancelButton>
           </ButtonGroup>
         </Card>
       </Content>

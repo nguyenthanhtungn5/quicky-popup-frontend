@@ -1,6 +1,8 @@
 {
   "app.createSession": "Session erstellen",
   "app.archiveSession": "Session archivieren",
+  "app.noSessionsTitle": "Keine Sessions verfügbar",
+  "app.noSessionsDescription": "Erstellen Sie Ihre erste Session und senden Sie den Link an alle.",
   "app.createNewSession": "Neue Session erstellen",
 
   "session.title": "Titel",
@@ -9,12 +11,22 @@
 
   "session.exampleTitle": "z. B.: CL 29.05",
   "session.exampleSubtitle": "15–16 Uhr · 16–18 Uhr",
+  "session.adminText": "Text des Organisators",
+  "session.adminTextPlaceholder": "z. B. Badminton 14.05\n1 Feld 13-16 Uhr\n2 Felder 16-18 Uhr\nMax. 12 Personen\nBei mehr Spielern zusätzliches Feld",
+  "session.additionalInfo": "Zusätzliche Informationen",
+  "session.slots": "Zeiträume",
+  "session.startTime": "Beginn",
+  "session.endTime": "Ende",
+  "session.courts": "Felder",
+  "session.participants": "Teilnehmer",
+  "session.waitlist": "Warteliste",
 
   "button.create": "Erstellen",
   "button.cancel": "Abbrechen",
   "button.edit": "Bearbeiten",
   "button.delete": "Löschen",
   "button.copy": "Kopieren",
+  "button.aiParse": "Mit AI auslesen",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "Du bist raus",
@@ -28,6 +40,7 @@
   "status.loading": "Lädt...",
   "status.error": "Ein Fehler ist aufgetreten",
   "status.success": "Erfolgreich gespeichert",
+  "status.parsing": "Wird verarbeitet...",
 
   "empty.noParticipants": "Noch keine Teilnehmer",
   "empty.noSessions": "Keine Sessions verfügbar",

@@ -343,7 +343,7 @@ const App = () => {
           type="button"
           onClick={() => navigate("/create-session")}
           aria-label={t("app.createSession")}
-          style={{ background: "darkseagreen" }}
+          style={{ background: "black" }}
         >
           <FaPlus size={"2em"} />
         </TopIconButton>
@@ -461,112 +461,54 @@ const App = () => {
             </ActionGroup>
           </Card>
         )}
-        {session?.participants && (
-          <Card>
-            <SectionTitle>{t("list.title")}</SectionTitle>
-            <ParticipantList>
-              {session.participants.map((participant, index) => {
-                const isEditingThis = editingParticipantId === participant.id;
-
-                return (
-                  <ParticipantItem key={participant.id}>
-                    {isEditingThis ? (
-                      <ParticipantEditBox>
-                        <NameInputRow>
-                          <NameInput
-                            value={participantDraft}
-                            onChange={(event) =>
-                              setParticipantDraft(event.target.value)
-                            }
-                            autoFocus
-                          />
-                          <SmallButton
-                            onClick={() => saveParticipantEdit(participant)}
-                          >
-                            OK
-                          </SmallButton>
-                        </NameInputRow>
-
-                        <EditSlotGrid>
-                          {session.slots?.map((slot) => (
-                            <EditSlotButton
-                              key={slot.id}
-                              type="button"
-                              $active={participantSlotIdsDraft.includes(
-                                slot.id,
-                              )}
-                              onClick={() =>
-                                toggleParticipantSlotDraft(slot.id)
-                              }
-                            >
-                              <span>
-                                {slot.startTime}–{slot.endTime}
-                              </span>
-                              <small>{slot.courtCount} sân</small>
-                            </EditSlotButton>
-                          ))}
-                        </EditSlotGrid>
-                      </ParticipantEditBox>
-                    ) : (
-                      <ParticipantViewRow>
-                        <ParticipantName>
-                          {index + 1}. {participant.name}
-                        </ParticipantName>
-
-                        <ParticipantSlotEdit>
-                          <ParticipantSlot>
-                            {participant.slotIds
-                              ?.map((slotId) => {
-                                const slot = session.slots?.find(
-                                  (s) => s.id === slotId,
-                                );
-                                return slot
-                                  ? `${slot.startTime}–${slot.endTime}`
-                                  : null;
-                              })
-                              .filter(Boolean)
-                              .join(", ") || "-"}
-                          </ParticipantSlot>
-                          <FaEdit
-                            onClick={() => startEditParticipant(participant)}
-                          />
-                        </ParticipantSlotEdit>
-                      </ParticipantViewRow>
-                    )}
-                  </ParticipantItem>
-                );
-              })}
-            </ParticipantList>
-          </Card>
-        )}
         {session?.waitlist?.length > 0 && (
-          <Card>
-            <SectionTitle>Wartelist</SectionTitle>
-            <ParticipantList>
-              {session.waitlist.map((p, index) => (
-                <ParticipantItem key={p.id}>
-                  <ParticipantName>
-                    {index + 1}. {p.name}
-                  </ParticipantName>
-                  <ParticipantSlot>{p.note}</ParticipantSlot>
-                </ParticipantItem>
-              ))}
-            </ParticipantList>
-          </Card>
+          <>
+            <Card>
+              <SectionTitle>Wartelist</SectionTitle>
+
+              <ParticipantList>
+                {session.waitlist.map((p, index) => (
+                  <ParticipantItem key={p.id}>
+                    <ParticipantName>
+                      {index + 1}. {p.name}
+                    </ParticipantName>
+
+                    <ParticipantSlot>{p.note}</ParticipantSlot>
+                  </ParticipantItem>
+                ))}
+              </ParticipantList>
+            </Card>
+
+            <CardButton
+              style={{
+                justifyContent: "center",
+                display: "flex",
+                cursor: "pointer",
+                fontWeight: "800",
+                background: "darkred",
+                color: "white",
+              }}
+              onClick={() => archiveSession()}
+            >
+              {t("app.archiveSession")}
+            </CardButton>
+          </>
         )}
-        <CardButton
-          style={{
-            justifyContent: "center",
-            display: "flex",
-            cursor: "pointer",
-            fontWeight: "800",
-            background: "darkred",
-            color: "white",
-          }}
-          onClick={() => archiveSession()}
-        >
-          {t("app.archiveSession")}
-        </CardButton>
+
+        {!session && (
+          <EmptyState>
+            <EmptyIcon>🏸</EmptyIcon>
+
+            <EmptyTitle>{t("app.noSessionsTitle")}</EmptyTitle>
+
+            <EmptyText>{t("app.noSessionsDescription")}</EmptyText>
+
+            <EmptyButton onClick={() => navigate("/create-session")}>
+              <FaPlus />
+              {t("app.createSession")}
+            </EmptyButton>
+          </EmptyState>
+        )}
       </Content>
       {copied && <Toast>{t("toast.copied")}</Toast>}
     </Page>
@@ -707,7 +649,7 @@ const CalculationButton = styled.button`
   flex: 0 0 auto;
   border: none;
   border-radius: 14px;
-  background: coral;
+  background: black;
   color: white;
   width: 44px;
   height: 44px;
@@ -837,7 +779,7 @@ const BaseActionButton = styled.button`
 `;
 
 const FightButton = styled(BaseActionButton)`
-  background: #f97316;
+  background: darkgreen;
   color: white;
   box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
 `;
@@ -1053,4 +995,55 @@ const SlotMeta = styled.div`
 const WaitlistButton = styled(BaseActionButton)`
   background: #facc15;
   color: #18181b;
+`;
+
+const EmptyState = styled.div`
+  min-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 20px;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 52px;
+  margin-bottom: 16px;
+`;
+
+const EmptyTitle = styled.h2`
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  color: #18181b;
+`;
+
+const EmptyText = styled.p`
+  margin: 10px 0 24px;
+  max-width: 300px;
+  color: #71717a;
+  line-height: 1.5;
+  font-size: 15px;
+`;
+
+const EmptyButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  border: none;
+  border-radius: 16px;
+  padding: 14px 18px;
+
+  background: #18181b;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.97);
+  }
 `;
