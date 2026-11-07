@@ -1,9 +1,8 @@
 {
-  "app.createSession": "Create session",
+  "app.createSession": "Create new session",
   "app.archiveSession": "Archive session",
   "app.noSessionsTitle": "No sessions available",
   "app.noSessionsDescription": "Create your first session and share the link with everyone.",
-  "app.createNewSession": "Create new session",
 
   "session.title": "Title",
   "session.subtitle": "Subtitle",
@@ -20,13 +19,18 @@
   "session.courts": "Courts",
   "session.participants": "Participants",
   "session.waitlist": "Waitlist",
+  "session.capacity": "Player limit",
+  "createSession.quickFromText": "Quick setup from text",
+  "createSession.quickFromTextHint": "Paste a message or description and let Quicky fill in the details.",
+  "createSession.sessionDetails": "Session details",
+  "createSession.sessionDetailsHint": "Enter details manually or edit the generated information.",
 
   "button.create": "Create",
   "button.cancel": "Cancel",
   "button.edit": "Edit",
   "button.delete": "Delete",
   "button.copy": "Copy",
-  "button.aiParse": "Parse with AI",
+  "button.aiParse": "Fill it for me",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "You're out",
@@ -40,7 +44,7 @@
   "status.loading": "Loading...",
   "status.error": "Something went wrong",
   "status.success": "Saved successfully",
-  "status.parsing": "Processing...",
+  "status.parsing": "Filling in details...",
 
   "empty.noParticipants": "No participants yet",
   "empty.noSessions": "No sessions available",

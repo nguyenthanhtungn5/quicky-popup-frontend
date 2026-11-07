@@ -1,6 +1,5 @@
 {
-  "app.createSession": "Tạo buổi chơi",
-  "app.createNewSession": "Tạo buổi chơi mới",
+  "app.createSession": "Tạo buổi chơi mới",
   "app.archiveSession": "Xóa buổi chơi này",
   "app.noSessionsTitle": "Chưa có buổi chơi nào",
   "app.noSessionsDescription": "Tạo buổi chơi đầu tiên và copy link cho mọi người nhé <3",
@@ -19,13 +18,18 @@
   "session.courts": "Sân",
   "session.participants": "Người tham gia",
   "session.waitlist": "Danh sách chờ",
+  "session.capacity": "Giới hạn số lượng người chơi",
+  "createSession.quickFromText": "Tạo nhanh",
+  "createSession.quickFromTextHint": "Dán tin nhắn hoặc mô tả, Quicky sẽ điền giúp bạn.",
+  "createSession.sessionDetails": "Thông tin buổi chơi",
+  "createSession.sessionDetailsHint": "Tự nhập hoặc chỉnh sửa thông tin đã được điền.",
 
   "button.create": "Tạo",
   "button.cancel": "Huỷ",
   "button.edit": "Chỉnh sửa",
   "button.delete": "Xóa",
   "button.copy": "Sao chép",
-  "button.aiParse": "Đọc nội dung",
+  "button.aiParse": "Điền giúp mình",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "Bạn mất rồi",
@@ -39,7 +43,7 @@
   "status.loading": "Đang tải...",
   "status.error": "Có lỗi xảy ra",
   "status.success": "Lưu thành công",
-  "status.parsing": "Đang xử lý...",
+  "status.parsing": "Đang điền thông tin...",
 
   "empty.noParticipants": "Chưa có người tham gia",
   "empty.noSessions": "Chưa có buổi chơi nào",

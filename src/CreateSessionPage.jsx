@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SectionTitle } from "./App";
 import {
+  SectionTitle,
   LanguageIconButton,
   LanguageSwitcher,
   CurrentLanguage,
@@ -11,12 +11,15 @@ import {
   LanguageOption,
 } from "./App";
 import { FaGlobe } from "react-icons/fa";
+import { LuScanText } from "react-icons/lu";
 
 const CreateSessionPage = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.resolvedLanguage || "vi";
   const [languageOpen, setLanguageOpen] = useState(false);
+  const detailsRef = useRef(null);
+
   const [rawText, setRawText] = useState("");
   const [loadingParse, setLoadingParse] = useState(false);
 
@@ -54,6 +57,12 @@ const CreateSessionPage = () => {
         participants: data.participants || [],
         waitlist: data.waitlist || [],
       });
+      requestAnimationFrame(() => {
+        detailsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
     } catch (e) {
       console.warn(e);
     } finally {
@@ -90,7 +99,6 @@ const CreateSessionPage = () => {
           <FaGlobe />
           <CurrentLanguage>{currentLanguage.toUpperCase()}</CurrentLanguage>
         </LanguageIconButton>
-
         {languageOpen && (
           <LanguageDropdown>
             {[
@@ -109,30 +117,38 @@ const CreateSessionPage = () => {
                 }}
               >
                 <span>{lang.label}</span>
-                {i18n.language === lang.key && <span>✓</span>}
+                {currentLanguage === lang.key && <span>✓</span>}
               </LanguageOption>
             ))}
           </LanguageDropdown>
         )}
       </LanguageSwitcher>
       <Content>
-        <Card>
+        <PageHeader>
           <Title>{t("app.createSession")}</Title>
-          <Subtitle>{t("app.createNewSession")}</Subtitle>
+        </PageHeader>
 
+        <Card>
+          <CardHeading>{t("createSession.quickFromText")}</CardHeading>
+          <CardHint>{t("createSession.quickFromTextHint")}</CardHint>
           <FormGroup>
-            <Label>{t("session.adminText")}</Label>
+            <Label htmlFor="session-raw-text">{t("session.adminText")}</Label>
             <TextArea
+              id="session-raw-text"
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               placeholder={t("session.adminTextPlaceholder")}
             />
           </FormGroup>
-
           <CreateButton onClick={parseSession} disabled={loadingParse}>
+            <LuScanText size={21} />
             {loadingParse ? t("status.parsing") : t("button.aiParse")}
           </CreateButton>
+        </Card>
 
+        <Card ref={detailsRef}>
+          <CardHeading>{t("createSession.sessionDetails")}</CardHeading>
+          <CardHint>{t("createSession.sessionDetailsHint")}</CardHint>
           <FormGroup>
             <Label>{t("session.title")}</Label>
             <Input
@@ -140,7 +156,6 @@ const CreateSessionPage = () => {
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             />
           </FormGroup>
-
           <FormGroup>
             <Label>{t("session.subtitle")}</Label>
             <Input
@@ -148,18 +163,17 @@ const CreateSessionPage = () => {
               onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
             />
           </FormGroup>
-
           <FormGroup>
             <Label>{t("session.capacity")}</Label>
             <Input
               type="number"
+              min="1"
               value={draft.capacity}
               onChange={(e) =>
                 setDraft({ ...draft, capacity: Number(e.target.value) })
               }
             />
           </FormGroup>
-
           <FormGroup>
             <Label>{t("session.additionalInfo")}</Label>
             <TextArea
@@ -171,35 +185,38 @@ const CreateSessionPage = () => {
           </FormGroup>
 
           <SectionTitle>{t("session.slots")}</SectionTitle>
-
           {draft.slots.map((slot, index) => (
             <SlotRow key={index}>
               <Input
-                value={slot.startTime}
+                value={slot.startTime ?? ""}
                 onChange={(e) => {
-                  const next = [...draft.slots];
-                  next[index].startTime = e.target.value;
+                  const next = draft.slots.map((item, i) =>
+                    i === index ? { ...item, startTime: e.target.value } : item,
+                  );
                   setDraft({ ...draft, slots: next });
                 }}
                 placeholder={t("session.startTime")}
               />
-
               <Input
-                value={slot.endTime}
+                value={slot.endTime ?? ""}
                 onChange={(e) => {
-                  const next = [...draft.slots];
-                  next[index].endTime = e.target.value;
+                  const next = draft.slots.map((item, i) =>
+                    i === index ? { ...item, endTime: e.target.value } : item,
+                  );
                   setDraft({ ...draft, slots: next });
                 }}
                 placeholder={t("session.endTime")}
               />
-
               <Input
                 type="number"
-                value={slot.courtCount}
+                min="0"
+                value={slot.courtCount ?? ""}
                 onChange={(e) => {
-                  const next = [...draft.slots];
-                  next[index].courtCount = Number(e.target.value);
+                  const next = draft.slots.map((item, i) =>
+                    i === index
+                      ? { ...item, courtCount: Number(e.target.value) }
+                      : item,
+                  );
                   setDraft({ ...draft, slots: next });
                 }}
                 placeholder={t("session.courts")}
@@ -208,30 +225,27 @@ const CreateSessionPage = () => {
           ))}
 
           <SectionTitle>{t("session.participants")}</SectionTitle>
-
           {draft.participants.map((p, index) => (
             <SlotRow key={index}>
-              <Input value={p.name} readOnly />
-              <Input value={p.startTime} readOnly />
-              <Input value={p.endTime} readOnly />
+              <Input value={p.name ?? ""} readOnly />
+              <Input value={p.startTime ?? ""} readOnly />
+              <Input value={p.endTime ?? ""} readOnly />
             </SlotRow>
           ))}
 
           <SectionTitle>{t("session.waitlist")}</SectionTitle>
-
           {draft.waitlist.map((p, index) => (
             <SlotRow key={index}>
-              <Input value={p.name} readOnly />
-              <Input value={p.note} readOnly />
+              <Input value={p.name ?? ""} readOnly />
+              <Input value={p.note ?? ""} readOnly />
             </SlotRow>
           ))}
-          {}
+
           <ButtonGroup>
-            <CreateButton onClick={createSession}>
+            <CreateButton type="button" onClick={createSession}>
               {t("button.create")}
             </CreateButton>
-
-            <CancelButton onClick={() => navigate("/")}>
+            <CancelButton type="button" onClick={() => navigate("/")}>
               {t("button.cancel")}
             </CancelButton>
           </ButtonGroup>
@@ -260,13 +274,34 @@ const Content = styled.main`
   max-width: 430px;
   margin: 0 auto;
   padding-top: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const PageHeader = styled.header`
+  padding: 0 4px;
+`;
+
+const CardHeading = styled.h2`
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 850;
+  color: #18181b;
+`;
+
+const CardHint = styled.p`
+  margin: 0 0 20px;
+  color: #71717a;
+  font-size: 13px;
+  line-height: 1.5;
 `;
 
 const Card = styled.section`
   background: #ffffff;
   border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 10px rgb(232, 235, 233);
 `;
 
 const Title = styled.h1`
@@ -279,7 +314,7 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.p`
-  margin: 6px 0 24px;
+  margin: 6px 0 0;
   color: #71717a;
   font-size: 14px;
 `;
@@ -307,7 +342,7 @@ const Input = styled.input`
 
   &:focus {
     border-color: darkgreen;
-    box-shadow: 0 0 0 3px rgba(14, 118, 14, 0.14);
+    box-shadow: 0 0 0 3px rgb(232, 235, 233);
   }
 `;
 
@@ -332,6 +367,11 @@ const BaseButton = styled.button`
 `;
 
 const CreateButton = styled(BaseButton)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
   background: darkgreen;
   color: white;
 `;
@@ -355,7 +395,7 @@ const TextArea = styled.textarea`
 
   &:focus {
     border-color: darkgreen;
-    box-shadow: 0 0 0 3px rgba(14, 118, 14, 0.14);
+    box-shadow: 0 0 0 3px rgb(232, 235, 233);
   }
 `;
 

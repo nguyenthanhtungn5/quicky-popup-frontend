@@ -570,7 +570,7 @@ const TabButton = styled.button`
 `;
 
 const Page = styled.div`
-  min-height: 100vh;
+  min-height: 95vh;
   background: #f4f4f5;
   color: #18181b;
   padding: 16px;

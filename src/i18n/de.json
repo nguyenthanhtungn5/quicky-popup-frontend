@@ -1,9 +1,8 @@
 {
-  "app.createSession": "Session erstellen",
+  "app.createSession": "Neue Session erstellen",
   "app.archiveSession": "Session archivieren",
   "app.noSessionsTitle": "Keine Sessions verfügbar",
   "app.noSessionsDescription": "Erstellen Sie Ihre erste Session und senden Sie den Link an alle.",
-  "app.createNewSession": "Neue Session erstellen",
 
   "session.title": "Titel",
   "session.subtitle": "Untertitel",
@@ -20,13 +19,18 @@
   "session.courts": "Felder",
   "session.participants": "Teilnehmer",
   "session.waitlist": "Warteliste",
+  "session.capacity": "Spielerlimit",
+  "createSession.quickFromText": "Schnell aus Text erstellen",
+  "createSession.quickFromTextHint": "Nachricht oder Beschreibung einfügen – Quicky füllt die Felder aus.",
+  "createSession.sessionDetails": "Spieldetails",
+  "createSession.sessionDetailsHint": "Angaben manuell eingeben oder bearbeiten.",
 
   "button.create": "Erstellen",
   "button.cancel": "Abbrechen",
   "button.edit": "Bearbeiten",
   "button.delete": "Löschen",
   "button.copy": "Kopieren",
-  "button.aiParse": "Mit AI auslesen",
+  "button.aiParse": "Für mich ausfüllen",
 
   "join.fight": "🔥 Fight! {{time}}",
   "join.full": "Du bist raus",
@@ -40,7 +44,7 @@
   "status.loading": "Lädt...",
   "status.error": "Ein Fehler ist aufgetreten",
   "status.success": "Erfolgreich gespeichert",
-  "status.parsing": "Wird verarbeitet...",
+  "status.parsing": "Wird ausgefüllt...",
 
   "empty.noParticipants": "Noch keine Teilnehmer",
   "empty.noSessions": "Keine Sessions verfügbar",
