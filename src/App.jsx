@@ -5,6 +5,8 @@ import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaGlobe, FaCalculator, FaPlus } from "react-icons/fa";
+import AppFooter from "./AppFooter";
+import { mergeTimeSlots } from "./utility";
 
 const STORAGE_USER_ID = "sport-session-user-id";
 const STORAGE_USER_NAME = "sport-session-user-name";
@@ -55,15 +57,69 @@ const saveName = (name) => {
   }
 };
 
-const buildSummary = (session) => {
-  const joined = session.participants.length;
-  const missing = Math.max(session.capacity - joined, 0);
+const buildSummary = (session, t) => {
+  const participants = session.participants || [];
+  const slots = [...(session.slots || [])].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime),
+  );
+  const waitlist = session.waitlist || [];
 
-  const list = session.participants
-    .map((p, i) => `${i + 1}. ${p.name}${p.slot === "16h" ? " (ab 16h)" : ""}`)
-    .join("\n");
+  const remaining = Math.max(session.capacity - participants.length, 0);
 
-  return `${session.title}\n1 sân 15h-16h\n2 sân 16h-18h\n\n👥 ${joined}/${session.capacity} (${missing} thiếu)\n\n${list}\n\n👉 Link:\n${session.link}`;
+  const courtLines = slots.map(
+    (slot) =>
+      `🕐 ${slot.startTime}–${slot.endTime} · ` +
+      t("copy.courts", { count: slot.courtCount }),
+  );
+
+  const playerLines = participants.map((player, index) => {
+    const time = mergeTimeSlots(player.slotIds || [], slots);
+
+    return `${index + 1}. ${player.name}` + (time ? ` · ${time}` : "");
+  });
+
+  const waitlistLines = waitlist.map(
+    (player, index) => `${index + 1}. ${player.name}`,
+  );
+
+  const notes = (
+    session.additionalInfo ||
+    session.additional_info ||
+    ""
+  ).trim();
+
+  const lines = [
+    `🏸 ${session.title}`,
+    ...(session.subtitle?.trim() && session.subtitle.trim() !== "-"
+      ? [session.subtitle.trim()]
+      : []),
+
+    "",
+    `📍 ${t("copy.sessionDetails")}`,
+    ...courtLines,
+
+    "",
+    `👥 ${t("list.title").toUpperCase()} ` +
+      `(${participants.length}/${session.capacity})`,
+    ...(playerLines.length ? playerLines : [t("copy.noParticipants")]),
+
+    "",
+    remaining > 0
+      ? `✅ ${t("capacity.remaining", { count: remaining })}`
+      : `🔴 ${t("status.full")}`,
+
+    ...(waitlistLines.length
+      ? ["", `⏳ ${t("session.waitlist")}`, ...waitlistLines]
+      : []),
+
+    ...(notes ? ["", `📝 ${t("copy.notes")}`, notes] : []),
+
+    "",
+    `🔗 ${t("copy.registerAt")}`,
+    session.link || window.location.href,
+  ];
+
+  return lines.join("\n");
 };
 
 const upsertParticipant = (participants, userId, name, slot) => {
@@ -95,7 +151,13 @@ const App = () => {
 
   // slots
   const [selectedSlotIds, setSelectedSlotIds] = useState([]);
+  const [joinError, setJoinError] = useState("");
+  const [joining, setJoining] = useState(false);
+
+  const [cancelling, setCancelling] = useState(false);
+
   const toggleSlot = (slotId) => {
+    setJoinError("");
     setSelectedSlotIds((prev) =>
       prev.includes(slotId)
         ? prev.filter((id) => id !== slotId)
@@ -115,24 +177,6 @@ const App = () => {
     const data = await res.json();
     setSessions(data);
     setActiveSession(data[0] || null);
-  };
-
-  const archiveSession = async () => {
-    if (!session) return;
-
-    try {
-      const res = await fetch(`/api/session/${session.id}/archive`, {
-        method: "PATCH",
-      });
-
-      if (!res.ok) throw new Error("Archive failed");
-
-      const nextSessions = sessions.filter((s) => s.id !== session.id);
-      setSessions(nextSessions);
-      setActiveSession(nextSessions[0] || null);
-    } catch (e) {
-      console.warn("Failed to archive session.", e);
-    }
   };
 
   useEffect(() => {
@@ -180,7 +224,7 @@ const App = () => {
     });
 
   const copy = async () => {
-    const text = buildSummary(session);
+    const text = buildSummary(session, t);
 
     try {
       await navigator.clipboard.writeText(text);
@@ -202,40 +246,96 @@ const App = () => {
   };
 
   const join = async () => {
-    if (!session) return;
+    if (!session || joining) return;
 
     const finalName = draft.trim() || name.trim();
 
     if (!finalName) {
       setEditingName(true);
+      setJoinError(t("join.enterName"));
+      return;
+    }
+
+    if (!session.slots?.length) {
+      setJoinError(t("join.noSlots"));
       return;
     }
 
     if (selectedSlotIds.length === 0) {
+      setJoinError(t("join.selectSlot"));
       return;
     }
 
-    saveName(finalName);
-    setName(finalName);
-    setDraft(finalName);
+    setJoining(true);
+    setJoinError("");
 
-    const updatedSession = await requestJson(
-      `/api/session/${session.id}/participants`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          id: userId,
-          name: finalName,
-          slotIds: selectedSlotIds,
-        }),
-      },
-    );
+    try {
+      const updatedSession = await requestJson(
+        `/api/session/${session.id}/participants`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            id: userId,
+            name: finalName,
+            slotIds: selectedSlotIds,
+          }),
+        },
+      );
 
-    setSession(updatedSession);
-    setSessions((prev) =>
-      prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
-    );
-    setSelectedSlotIds([]);
+      saveName(finalName);
+      setName(finalName);
+      setDraft(finalName);
+      setEditingName(false);
+
+      setSession(updatedSession);
+      setSessions((prev) =>
+        prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+      );
+
+      setSelectedSlotIds([]);
+    } catch (error) {
+      console.error("Failed to join session:", error);
+      setJoinError(t("join.failed"));
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const isJoined = session?.participants?.some((p) => p.id === userId);
+
+  const cancelJoin = async () => {
+    if (!session || cancelling) return;
+
+    // Chưa đăng ký: chỉ reset lựa chọn
+    if (!isJoined) {
+      setSelectedSlotIds([]);
+      setJoinError("");
+      return;
+    }
+
+    if (!window.confirm(t("join.cancelConfirm"))) return;
+
+    setCancelling(true);
+    setJoinError("");
+
+    try {
+      const updatedSession = await requestJson(
+        `/api/session/${session.id}/participants/${userId}`,
+        { method: "DELETE" },
+      );
+
+      setSession(updatedSession);
+      setSessions((prev) =>
+        prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+      );
+
+      setSelectedSlotIds([]);
+    } catch (error) {
+      console.error("Failed to cancel participation:", error);
+      setJoinError(t("join.cancelFailed"));
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const joinWaitlist = async () => {
@@ -338,26 +438,41 @@ const App = () => {
         )}
       </LanguageSwitcher>
       <TopActionRow>
-        {session?.waitlist?.length > 0 && (
+        {session && (
           <>
             <TopIconButton
               type="button"
               onClick={() => navigate("/create-session")}
               aria-label={t("app.createSession")}
-              style={{ background: "darkgreen" }}
+              title={t("app.createSession")}
             >
-              <FaPlus size={"2em"} />
+              <FaPlus size={24} />
             </TopIconButton>
+
+            <TopIconButton
+              type="button"
+              onClick={() =>
+                navigate("/create-session", {
+                  state: { editSession: session },
+                })
+              }
+              aria-label={t("button.edit")}
+              title={t("button.edit")}
+            >
+              <FaEdit size={24} />
+            </TopIconButton>
+
             <TopIconButton
               type="button"
               onClick={copy}
               aria-label={t("button.copy")}
+              title={t("button.copy")}
               $copied={copied}
             >
-              {!copied ? (
-                <FaRegCopy size={"2em"} />
+              {copied ? (
+                <FaRegCheckCircle size={24} />
               ) : (
-                <FaRegCheckCircle size={"2em"} />
+                <FaRegCopy size={24} />
               )}
             </TopIconButton>
           </>
@@ -449,7 +564,11 @@ const App = () => {
                     ))}
                   </SlotGrid>
 
-                  <FightButton onClick={join}>🔥 Fight!</FightButton>
+                  {joinError && <JoinError role="alert">{joinError}</JoinError>}
+
+                  <FightButton type="button" onClick={join} disabled={joining}>
+                    {joining ? t("status.loading") : "🔥 Fight!"}
+                  </FightButton>
                 </>
               ) : (
                 <WaitlistButton onClick={joinWaitlist}>
@@ -457,10 +576,45 @@ const App = () => {
                 </WaitlistButton>
               )}
 
-              <CancelButton onClick={() => setSelectedSlotIds([])}>
-                {t("join.cancel")}
+              <CancelButton
+                type="button"
+                onClick={cancelJoin}
+                disabled={cancelling}
+              >
+                {cancelling ? t("status.loading") : t("join.cancel")}
               </CancelButton>
             </ActionGroup>
+          </Card>
+        )}
+        {session && (
+          <Card>
+            <SectionTitle>
+              {t("list.title")} ({session.participants?.length ?? 0})
+            </SectionTitle>
+
+            <ParticipantList>
+              {session.participants?.map((participant, index) => {
+                const playingTimes = mergeTimeSlots(
+                  participant.slotIds || [],
+                  session.slots || [],
+                );
+
+                return (
+                  <ParticipantItem
+                    key={participant.id}
+                    $isMe={participant.id === userId}
+                  >
+                    <ParticipantName>
+                      {index + 1}. {participant.name}
+                    </ParticipantName>
+
+                    {playingTimes && (
+                      <ParticipantSlot>{playingTimes}</ParticipantSlot>
+                    )}
+                  </ParticipantItem>
+                );
+              })}
+            </ParticipantList>
           </Card>
         )}
         {session?.waitlist?.length > 0 && (
@@ -480,20 +634,6 @@ const App = () => {
                 ))}
               </ParticipantList>
             </Card>
-
-            <CardButton
-              style={{
-                justifyContent: "center",
-                display: "flex",
-                cursor: "pointer",
-                fontWeight: "800",
-                background: "darkred",
-                color: "white",
-              }}
-              onClick={() => archiveSession()}
-            >
-              {t("app.archiveSession")}
-            </CardButton>
           </>
         )}
 
@@ -512,6 +652,7 @@ const App = () => {
           </EmptyState>
         )}
       </Content>
+      <AppFooter />
       {copied && <Toast>{t("toast.copied")}</Toast>}
     </Page>
   );
@@ -808,9 +949,17 @@ const ParticipantList = styled.div`
 `;
 
 const ParticipantItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+
   border-radius: 16px;
   padding: 13px 14px;
-  background: ${({ $isMe }) => ($isMe ? "#ffedd5" : "#fafafa")};
+
+  background: ${({ $isMe }) => ($isMe ? "#e8f5e9" : "#fafafa")};
+
   font-weight: ${({ $isMe }) => ($isMe ? 900 : 600)};
 `;
 
@@ -841,10 +990,8 @@ const ParticipantName = styled.span`
 `;
 
 const ParticipantSlot = styled.span`
-  margin-left: 12px;
-  font-size: 14px;
-  color: black;
-  flex: 0 0 auto;
+  font-size: 13px;
+  color: #52525b;
 `;
 
 const ParticipantSlotEdit = styled.div`
@@ -1000,7 +1147,7 @@ const WaitlistButton = styled(BaseActionButton)`
 `;
 
 const EmptyState = styled.div`
-  min-height: 55vh;
+  min-height: 51vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1048,4 +1195,11 @@ const EmptyButton = styled.button`
   &:active {
     transform: scale(0.97);
   }
+`;
+
+const JoinError = styled.p`
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
 `;
