@@ -66,6 +66,8 @@
   "toast.copied": "Copied to clipboard",
   "user.nameLabel": "Name",
   "user.namePlaceholder": "Enter your name",
+  "user.updateNameFailed": "Failed to update name. Please try again.",
+
   "status.full": "Full – waitlist only",
 
   "footer.description": "Quickly join a game without an account.",
@@ -76,6 +78,7 @@
 
   "copy.notes": "Notes:",
   "copy.registerAt": "Join here:",
+  "copy.sessionDetails": "Session Details:",
 
   "calculation": {
     "noSession": "Session not found",

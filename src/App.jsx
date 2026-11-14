@@ -190,15 +190,41 @@ const App = () => {
     if (selected) setActiveSession(selected);
   };
 
-  const commitName = () => {
+  const commitName = async () => {
     const finalName = draft.trim();
-    if (!finalName) return false;
+    if (!finalName) return;
 
-    saveName(finalName);
-    setName(finalName);
-    setDraft(finalName);
-    setEditingName(false);
-    return true;
+    const participant = session?.participants?.find((p) => p.id === userId);
+
+    try {
+      // Nếu đã đăng ký, cập nhật participant trên backend
+      if (participant && participant.name !== finalName) {
+        const updatedSession = await requestJson(
+          `/api/session/${session.id}/participants`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              id: userId,
+              name: finalName,
+              slotIds: participant.slotIds || [],
+            }),
+          },
+        );
+
+        setSession(updatedSession);
+        setSessions((prev) =>
+          prev.map((s) => (s.id === updatedSession.id ? updatedSession : s)),
+        );
+      }
+
+      saveName(finalName);
+      setName(finalName);
+      setDraft(finalName);
+      setEditingName(false);
+    } catch (error) {
+      console.error("Failed to update name:", error);
+      setJoinError(t("user.updateNameFailed"));
+    }
   };
 
   const startEditParticipant = (participant) => {

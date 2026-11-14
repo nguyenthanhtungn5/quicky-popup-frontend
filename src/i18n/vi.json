@@ -65,6 +65,7 @@
   "toast.copied": "Đã sao chép vào clipboard",
   "user.nameLabel": "Tên",
   "user.namePlaceholder": "Nhập tên của bạn",
+  "user.updateNameFailed": "Không thể cập nhật tên. Vui lòng thử lại.",
   "status.full": "đủ rồi",
 
   "footer.description": "Tạo buổi chơi nhanh, tham gia dễ dàng. \nKhông cần tài khoản.",
@@ -75,6 +76,7 @@
 
   "copy.notes": "Ghi chú:",
   "copy.registerAt": "Đăng ký tại:",
+  "copy.sessionDetails": "Thông tin buổi chơi:",
 
   "calculation": {
     "noSession": "Không tìm thấy buổi chơi",

@@ -61,6 +61,8 @@
   "empty.noParticipants": "Noch keine Teilnehmer",
   "empty.noSessions": "Keine Sessions verfügbar",
   "user.greeting": "Hallo",
+  "user.updateNameFailed": "Fehler beim Aktualisieren des Namens. Bitte versuchen Sie es erneut.",
+
   "join.cancel": "Bin leider beschäftigt",
   "toast.copied": "In die Zwischenablage kopiert",
   "user.nameLabel": "Name",
